@@ -1,10 +1,10 @@
 using System.Text;
 using System.Text.Json;
-using BioshipSimulator.ML;
-using BioshipSimulator.Models;
-using BioshipSimulator.Services;
-using BioshipSimulator.Simulation;
-using BioshipSimulator.UI;
+using SimulatorML.ML;
+using SimulatorML.Models;
+using SimulatorML.Services;
+using SimulatorML.Simulation;
+using SimulatorML.UI;
 using Spectre.Console;
 
 Console.OutputEncoding = Encoding.UTF8;

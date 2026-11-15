@@ -1,12 +1,12 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using BioshipSimulator.Models;
+using SimulatorML.Models;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using Microsoft.ML.Trainers.FastTree;
 
-namespace BioshipSimulator.ML;
+namespace SimulatorML.ML;
 
 public class BioShipMlAutopilot
 {

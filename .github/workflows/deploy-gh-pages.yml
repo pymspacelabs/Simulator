@@ -35,12 +35,12 @@ jobs:
       - name: Restore solution
         run: dotnet restore ./Simulator.slnx
 
-      - name: Run BioshipSimulator (x64) to train ML.NET and export artifacts for WASM
+      - name: Run SimulatorML (x64) to train ML.NET and export artifacts for WASM
         env:
           NASA_API_KEY: ${{ secrets.NASA_API_KEY || 'DEMO_KEY' }}
         working-directory: ${{ github.workspace }}
         run: |
-          dotnet run --project ./src/BioshipSimulator/BioshipSimulator.csproj -c Release --no-restore -- --export-only --output ./src/Simulator/wwwroot/MLArtifacts
+          dotnet run --project ./src/SimulatorML/SimulatorML.csproj -c Release --no-restore -- --export-only --output ./src/Simulator/wwwroot/MLArtifacts
 
       - name: WASM artifacts validation
         working-directory: ${{ github.workspace }}

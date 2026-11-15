@@ -1,6 +1,6 @@
 using Microsoft.ML.Data;
 
-namespace BioshipSimulator.Models;
+namespace SimulatorML.Models;
 
 public record class SolarBioCycleData
 {

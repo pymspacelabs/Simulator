@@ -1,4 +1,4 @@
-namespace BioshipSimulator.Models;
+namespace SimulatorML.Models;
 
 public enum FlightStage
 {

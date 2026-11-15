@@ -1,4 +1,4 @@
-namespace BioshipSimulator;
+namespace SimulatorML;
 
 public class BioShipMlAutopilot
 {

@@ -2,7 +2,7 @@
   <Folder Name="/src/Simulator/">
     <Project Path="src/Simulator/Simulator.csproj" />
   </Folder>
-  <Folder Name="/src/BioshipSimulator/">
-    <Project Path="src/BioshipSimulator/BioshipSimulator.csproj" />
+  <Folder Name="/src/SimulatorML/">
+    <Project Path="src/SimulatorML/SimulatorML.csproj" />
   </Folder>
 </Solution>

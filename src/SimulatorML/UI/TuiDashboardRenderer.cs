@@ -1,9 +1,9 @@
 using System.Text;
-using BioshipSimulator.Models;
-using BioshipSimulator.Simulation;
+using SimulatorML.Models;
+using SimulatorML.Simulation;
 using Spectre.Console;
 
-namespace BioshipSimulator.UI;
+namespace SimulatorML.UI;
 
 public static class TuiDashboardRenderer
 {

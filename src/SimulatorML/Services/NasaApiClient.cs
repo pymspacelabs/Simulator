@@ -1,7 +1,7 @@
 using System.Text.Json;
-using BioshipSimulator.Models;
+using SimulatorML.Models;
 
-namespace BioshipSimulator.Services;
+namespace SimulatorML.Services;
 
 public static class NasaApiClient
 {

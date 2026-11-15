@@ -1,4 +1,4 @@
-namespace BioshipSimulator.Services;
+namespace SimulatorML.Services;
 
 public sealed class NasaMultiApiSnapshot
 {

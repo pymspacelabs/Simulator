@@ -1,9 +1,9 @@
-using BioshipSimulator.ML;
-using BioshipSimulator.Models;
-using BioshipSimulator.Services;
+using SimulatorML.ML;
+using SimulatorML.Models;
+using SimulatorML.Services;
 using Spectre.Console;
 
-namespace BioshipSimulator.Simulation;
+namespace SimulatorML.Simulation;
 
 public class BioShipEngine
 {

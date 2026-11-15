@@ -7,7 +7,7 @@
 
 ### 1. Outpost Environments & Core Architectural Decisions
 
-Both **`BioshipSimulator`** (the `.NET 11` `x64` Quad-Ensemble `ML.NET` training and TUI engine) and **`Simulator`** (the `Blazor WebAssembly`) enforce a coupled **Outpost Systems Architecture** across two primary surface/orbital outpost environments—**Lunar Outpost (`LunarOutpost` — Shackleton South Pole & Gateway NRHO)** and **Martian Outpost (`MartianOutpost` — Jezero/Arcadia ISRU Base)**—alongside **Low Earth Orbit (`ISS`)** as the baseline validation testbed.
+Both **`SimulatorML`** (the `.NET 11` `x64` Quad-Ensemble `ML.NET` training and TUI engine) and **`Simulator`** (the `Blazor WebAssembly`) enforce a coupled **Outpost Systems Architecture** across two primary surface/orbital outpost environments—**Lunar Outpost (`LunarOutpost` — Shackleton South Pole & Gateway NRHO)** and **Martian Outpost (`MartianOutpost` — Jezero/Arcadia ISRU Base)**—alongside **Low Earth Orbit (`ISS`)** as the baseline validation testbed.
 
 Every deck loadout and card play in `bioship_decks_catalog.json` (`SchemaVersion: 7.0`) requires balancing **four core architectural decisions** against **three physical resource costs (trade-offs)** under dynamic **NASA DONKI space weather events**:
 
@@ -57,7 +57,7 @@ flowchart TB
 
 To ensure that every card in `bioship_decks_catalog.json` and every decision tree in the **240,000-sample `ML.NET` Quad-Ensemble** reflects real aerospace physics rather than arbitrary game numbers, the project integrates **9 public NASA & Partner APIs**:
 
-| NASA / Partner API | Endpoint / Identifier Used | Architectural Decision Domain | Why It Is Used in `BioshipSimulator` & `Simulator` |
+| NASA / Partner API | Endpoint / Identifier Used | Architectural Decision Domain | Why It Is Used in `SimulatorML` & `Simulator` |
 | :--- | :--- | :--- | :--- |
 | **1. [NASA DONKI API](https://api.nasa.gov/)** (`FLR`, `SEP`, `CME`, `IPS`) | `https://api.nasa.gov/DONKI/FLR`<br/>`https://api.nasa.gov/DONKI/SEP`<br/>`https://api.nasa.gov/DONKI/CME` | **Radiation Shielding, Power Budgeting & Comms Delay** | Injects real-time **Solar Flares (`FLR`)**, **Solar Energetic Proton (`SEP`)** storms, and **Coronal Mass Ejections (`CME`)** into `DonkiSpaceWeatherEventsDeck`. Drives dynamic spikes in `EffectiveRadiationIndex`, forces `>= 40 g/cm²` shielding checks, triggers solar array Watt penalties, and models HF/Ka-band radio blackouts (`CommunicationDelaySpikeSec`). |
 | **2. [NASA Image and Video Library API](https://images.nasa.gov/)** | `https://images-api.nasa.gov/search?q=...&media_type=image`<br/>`https://images-assets.nasa.gov/image/{id}/{id}~medium.jpg` | **Visual Card Asset Pipeline (All 5 Deck Sets)** | Populates `NasaImageApiUrl` and `NasaImageAssetUrl` on every single card (`44` cards total) so the `.NET MAUI Blazor` card game dynamically renders authentic public-domain NASA photography inside the 90-degree rectangular card template window. |
@@ -76,7 +76,7 @@ To ensure that every card in `bioship_decks_catalog.json` and every decision tre
 
 ### 1. Ambientes de Outpost e Decisões Arquiteturais do Jogo
 
-Tanto o **`BioshipSimulator`** (motor `.NET 11` `x64` de treinamento do Quad-Ensemble `ML.NET` e interface TUI) quanto o **`Simulator`** (simulador web `Blazor WebAssembly` e base para o card game em `.NET MAUI`) operam sobre uma **Arquitetura de Decisões de Postos Avançados (Outposts)** focada no **Posto Lunar (`LunarOutpost` — Polo Sul em Shackleton e órbita NRHO)** e no **Posto Marciano (`MartianOutpost` — Base ISRU em Jezero/Arcadia)**, utilizando a **Estação Espacial Internacional (`ISS`)** como bancada de validação em órbita baixa.
+Tanto o **`SimulatorML`** (motor `.NET 11` `x64` de treinamento do Quad-Ensemble `ML.NET` e interface TUI) quanto o **`Simulator`** (simulador web `Blazor WebAssembly` e base para o card game em `.NET MAUI`) operam sobre uma **Arquitetura de Decisões de Postos Avançados (Outposts)** focada no **Posto Lunar (`LunarOutpost` — Polo Sul em Shackleton e órbita NRHO)** e no **Posto Marciano (`MartianOutpost` — Base ISRU em Jezero/Arcadia)**, utilizando a **Estação Espacial Internacional (`ISS`)** como bancada de validação em órbita baixa.
 
 Cada combinação de cartas no `bioship_decks_catalog.json` (`SchemaVersion: 7.0`) exige equilibrar **quatro decisões arquiteturais** contra **três custos físicos (trade-offs)** sob eventos dinâmicos de clima espacial do **NASA DONKI**:
 
@@ -126,7 +126,7 @@ flowchart TB
 
 Para que cada carta do `bioship_decks_catalog.json` e cada árvore de decisão das **240.000 amostras do `ML.NET` Quad-Ensemble** reflita restrições físicas reais, o repositório consome **9 APIs públicas da NASA e parceiros**:
 
-| API NASA / Parceiro | Endpoint / Identificador Utilizado | Decisão Arquitetural Atendida | Motivo do Uso no `BioshipSimulator` e `Simulator` |
+| API NASA / Parceiro | Endpoint / Identificador Utilizado | Decisão Arquitetural Atendida | Motivo do Uso no `SimulatorML` e `Simulator` |
 | :--- | :--- | :--- | :--- |
 | **1. [NASA DONKI API](https://api.nasa.gov/)** (`FLR`, `SEP`, `CME`, `IPS`) | `https://api.nasa.gov/DONKI/FLR`<br/>`https://api.nasa.gov/DONKI/SEP`<br/>`https://api.nasa.gov/DONKI/CME` | **Blindagem, Orçamento de Energia e Atraso de Comunicação** | Alimenta o `DonkiSpaceWeatherEventsDeck` com **Erupções Solares (`FLR`)**, **Eventos de Prótons Energéticos (`SEP`)** e **Ejeções de Massa Coronal (`CME`)** reais. Dispara picos no `EffectiveRadiationIndex`, exige piso de `>= 40 g/cm²` de blindagem, reduz a geração solar em Watts e simula blackouts de rádio (`CommunicationDelaySpikeSec`). |
 | **2. [NASA Image and Video Library API](https://images.nasa.gov/)** | `https://images-api.nasa.gov/search?q=...&media_type=image`<br/>`https://images-assets.nasa.gov/image/{id}/{id}~medium.jpg` | **Pipeline Visual dos Cards (Todos os 5 Sets)** | Preenche as propriedades `NasaImageApiUrl` e `NasaImageAssetUrl` em todas as `44` cartas do catálogo, permitindo que o jogo em `.NET MAUI Blazor` carregue fotografias oficiais de domínio público da NASA dentro da janela retangular de cada card. |

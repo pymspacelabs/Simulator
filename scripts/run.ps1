@@ -13,7 +13,7 @@ $verbosity = "normal"
 
 $watch = $false
 
-$ml_net = Resolve-Path $(Join-Path $root ".\src\BioshipSimulator\BioShipSimulator.csproj")
+$ml_net = Resolve-Path $(Join-Path $root ".\src\SimulatorML\SimulatorML.csproj")
 $b_wasm = Resolve-Path $(Join-Path $root ".\src\Simulator\Simulator.csproj")
 
 Push-Location $root

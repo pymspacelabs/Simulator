@@ -1,4 +1,4 @@
-namespace BioshipSimulator.Models;
+namespace SimulatorML.Models;
 
 public sealed record QuadMlPrediction(
     float FuelYieldRate,

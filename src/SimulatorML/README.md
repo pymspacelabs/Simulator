@@ -92,11 +92,11 @@ Every time you change a card, add a crew member, or pick a new planet, the 4 adv
 
 ### Model Architecture & Implementation
 
-The `BioShipSimulator` engine (`net11.0`, `x64`) implements a **Quad-Ensemble** of four independent [ML.NET FastTree](https://www.nuget.org/packages/Microsoft.ML.FastTree/) gradient-boosted regression tree models (`MLContext(seed: 42)`). Training data consists of **240,000 synthetic telemetry vectors** (**80,000 samples per operational destination**: `ISS`, `Moon`, and `Mars`) generated from a coupled biophysical, thermodynamic, and mass-balance ground-truth model calibrated against **8 public NASA REST APIs** and [NASA OCHMO ECLSS](https://www.nasa.gov/wp-content/uploads/2023/07/eclss-technical-brief-ochmo.pdf) human metabolic baselines.
+The `SimulatorML` engine (`net11.0`, `x64`) implements a **Quad-Ensemble** of four independent [ML.NET FastTree](https://www.nuget.org/packages/Microsoft.ML.FastTree/) gradient-boosted regression tree models (`MLContext(seed: 42)`). Training data consists of **240,000 synthetic telemetry vectors** (**80,000 samples per operational destination**: `ISS`, `Moon`, and `Mars`) generated from a coupled biophysical, thermodynamic, and mass-balance ground-truth model calibrated against **8 public NASA REST APIs** and [NASA OCHMO ECLSS](https://www.nasa.gov/wp-content/uploads/2023/07/eclss-technical-brief-ochmo.pdf) human metabolic baselines.
 
 ```mermaid
 flowchart TB
-    subgraph TRAINING["Training Pipeline (BioshipSimulator - x64)"]
+    subgraph TRAINING["Training Pipeline (SimulatorML - x64)"]
         DS["GenerateThreeDestinationsDatasetCsv<br/>240,000 Rows x 36 Columns (32 Features + 4 Labels)"]
         CAT["Concatenate('Features', 32 float columns)"]
         FT1["FastTree: LabelFuelYieldRate<br/>160 Trees | 48 Leaves | MinLeaf=14 | LR=0.12"]
@@ -164,13 +164,13 @@ flowchart TB
 
 ---
 
-### CLI Usage (`BioShipSimulator`)
+### CLI Usage (`SimulatorML`)
 
 ```bash
 # Interactive TUI Simulation (en-US or pt-BR logs)
-dotnet run --project BioshipSimulator -- --target Mars --lang en-US
-dotnet run --project BioshipSimulator -- --target Moon --lang pt-BR
+dotnet run --project SimulatorML -- --target Mars --lang en-US
+dotnet run --project SimulatorML -- --target Moon --lang pt-BR
 
 # Headless CI/CD Artifact Export (240k Quad-Ensemble + 3-Deck Catalog + NASA Snapshot)
-dotnet run --project BioshipSimulator -- --export-only --output SimulatorBioship/wwwroot/MLArtifacts --lang en-US
+dotnet run --project SimulatorML -- --export-only --output SimulatorBioship/wwwroot/MLArtifacts --lang en-US
 ```
