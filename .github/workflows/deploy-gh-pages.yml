@@ -33,19 +33,19 @@ jobs:
           dotnet-version: '11.0.100' 
 
       - name: Restore solution
-        run: dotnet restore ./Simulator/Simulator.slnx
+        run: dotnet restore ./Simulator.slnx
 
       - name: Run BioshipSimulator (x64) to train ML.NET and export artifacts for WASM
         env:
           NASA_API_KEY: ${{ secrets.NASA_API_KEY || 'DEMO_KEY' }}
         run: |
-          dotnet run --project ./Simulator/src/BioshipSimulator/BioShipSimulator.csproj -c Release -- --export-only --output ./Simulator/src/Simulator/wwwroot/MLArtifacts
+          dotnet run --project ./src/BioshipSimulator/BioshipSimulator.csproj -c Release -- --export-only --output ./src/Simulator/wwwroot/MLArtifacts
 
       - name: WASM artifacts validation
-        run: ls -lh ./Simulator/src/Simulator/wwwroot/MLArtifacts
+        run: ls -lh ./src/Simulator/wwwroot/MLArtifacts
 
       - name: Publish SimulatorBioship (Blazor WebAssembly)
-        run: dotnet publish ./Simulator/src/Simulator/Simulator.csproj -c Release -o release --no-restore
+        run: dotnet publish ./src/Simulator/Simulator.csproj -c Release -o release --no-restore
 
       - name: Setup base-href, .nojekyll e 404.html to GitHub Pages
         run: |
