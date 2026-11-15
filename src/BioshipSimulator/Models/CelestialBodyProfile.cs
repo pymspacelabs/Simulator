@@ -1,0 +1,30 @@
+namespace BioshipSimulator.Models;
+
+public sealed record CelestialBodyProfile(
+    CelestialTargetId Id,
+    string RouteSlug,
+    string ShortLabelEn,
+    string ShortLabelPt,
+    string DisplayNameEn,
+    string DisplayNamePt,
+    string JplHorizonsCommand,
+    double MeanDistanceFromEarthKm,
+    float Log10DistanceKm,
+    float SemiMajorAxisAu,
+    float SolarIrradianceFactor,
+    float AmbientRadiationEnvIndex,
+    float ExternalHostilityIndex,
+    float SurfaceGravityMs2,
+    float EscapeVelocityKms,
+    float SuitWearPerDay,
+    float ToolWearPerDay,
+    float TotalMissionDeltaVms,
+    float OutboundTransitDays,
+    float ReturnTransitDays,
+    float SafeReturnYieldLimit,
+    float SafeReturnFuelReserveFloor,
+    int RecommendedCrew,
+    float BaseBioreactorLiters,
+    List<string> BiologicalHazardsEn,
+    List<string> BiologicalHazardsPt
+);

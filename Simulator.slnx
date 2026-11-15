@@ -3,6 +3,6 @@
     <Project Path="src/Simulator/Simulator.csproj" />
   </Folder>
   <Folder Name="/src/BioshipSimulator/">
-    <Project Path="src/BioshipSimulator/BioShipSimulator.csproj" />
+    <Project Path="src/BioshipSimulator/BioshipSimulator.csproj" />
   </Folder>
 </Solution>

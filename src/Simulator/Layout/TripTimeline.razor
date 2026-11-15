@@ -29,7 +29,7 @@
                         ML.NET: @_modelSourceStatus
                     </MudChip>
                     <MudChip T="string" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.AutoAwesome">
-                        Combos Ativos: @_activeSynergies.Count / 4
+                        Combos Ativos: @_activeSynergies.Count / 6
                     </MudChip>
                     <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.WbSunny">
                         DONKI: @_latestSolarFlare (@($"{_effectiveRadiationIndex:F2}x rad"))
@@ -139,7 +139,7 @@
                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                         <MudText Typo="Typo.h6" Color="Color.Primary">
                             <MudIcon Icon="@Icons.Material.Filled.Style" Class="mr-1" Size="Size.Small" />
-                            Construtor 3-Decks (32 Features ML.NET)
+                            Construtor 5-Decks (36 Features ML.NET)
                         </MudText>
                         <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshLiveNasaTelemetryAsync">
@@ -227,8 +227,63 @@
                             </MudStack>
                         </MudExpansionPanel>
 
-                        @* PAINEL DE AUDITORIA DAS 32 VARIÁVEIS DE ENTRADA DO MODELO ML.NET *@
-                        <MudExpansionPanel Text="4. Matriz de Telemetria das 32 Variáveis ML.NET">
+                        @* DECK 4: DECISÕES ARQUITETURAIS DO OUTPOST LUNAR / MARCIANO (8 CARTAS) *@
+                        <MudExpansionPanel Text="@($"4. Deck de Decisões Arquiteturais do Outpost ({_selectedOutpostDecisionCardIds.Count}/4 de 8 cartas)")">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.caption" Color="Color.Info">
+                                    <b>Trade-Offs Ativos:</b> @($"{_outpostWattDelta:+0;-0;0} W") | @($"{_outpostO2LitersDelta:+0;-0;0} L O₂/d") | @($"+{_outpostShieldingGcm2Delta:F1} g/cm²") | Latência: <b>@($"{_communicationDelaySec:F1} s")</b>
+                                </MudText>
+                                @foreach (var arcCard in ThreeDeckDefinitions.OutpostArchitecturalDecisionsDeck)
+                                {
+                                    bool eq = _selectedOutpostDecisionCardIds.Contains(arcCard.CardId);
+                                    <MudPaper Class="pa-2" Outlined="true" Elevation="0">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <div>
+                                                <MudText Typo="Typo.body2" Color="@(eq ? Color.Info : Color.Default)">
+                                                    <b>[@arcCard.CardId] @arcCard.NamePt</b> (@arcCard.DecisionDomainPt — @arcCard.OutpostEnvPt)
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">
+                                                    @($"{arcCard.WattDelta:+0;-0;0} W") | @($"{arcCard.O2LitersDelta:+0;-0;0} L O₂/d") | @($"+{arcCard.ShieldingGcm2Delta:F1} g/cm²") | @($"{arcCard.CommDelaySecDelta:+0;-0;0} s") — <i>@arcCard.NasaSource</i>
+                                                </MudText>
+                                            </div>
+                                            <MudSwitch T="bool" Value="@eq"
+                                                       ValueChanged="@((bool v) => ToggleOutpostDecisionCard(arcCard.CardId, v))"
+                                                       Color="Color.Info"
+                                                       Disabled="@(!eq && _selectedOutpostDecisionCardIds.Count >= 4)" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudExpansionPanel>
+
+                        @* DECK 5: EVENTOS DE CLIMA ESPACIAL NASA DONKI (4 CARTAS) *@
+                        <MudExpansionPanel Text="@($"5. Deck NASA DONKI Clima Espacial ({_selectedDonkiEventCardIds.Count}/2 de 4 eventos)")">
+                            <MudStack Spacing="1">
+                                @foreach (var swxCard in ThreeDeckDefinitions.DonkiSpaceWeatherEventsDeck)
+                                {
+                                    bool eq = _selectedDonkiEventCardIds.Contains(swxCard.CardId);
+                                    <MudPaper Class="pa-2" Outlined="true" Elevation="0">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <div>
+                                                <MudText Typo="Typo.body2" Color="@(eq ? Color.Warning : Color.Default)">
+                                                    <b>[@swxCard.CardId] @swxCard.EventClassPt</b> (Piso &ge; @($"{swxCard.RequiredShieldingFloorGcm2:F0} g/cm²"))
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">
+                                                    Penalidade: @($"{swxCard.WattPenalty:F0} W"), @($"{swxCard.O2LitersLoss:F0} L O₂/d"), +@($"{swxCard.CommDelaySpikeSec:F0} s") — @swxCard.CountermeasurePt
+                                                </MudText>
+                                            </div>
+                                            <MudSwitch T="bool" Value="@eq"
+                                                       ValueChanged="@((bool v) => ToggleDonkiEventCard(swxCard.CardId, v))"
+                                                       Color="Color.Warning"
+                                                       Disabled="@(!eq && _selectedDonkiEventCardIds.Count >= 2)" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudExpansionPanel>
+
+                        @* PAINEL DE AUDITORIA DAS 36 VARIÁVEIS DE ENTRADA DO MODELO ML.NET *@
+                        <MudExpansionPanel Text="6. Matriz de Telemetria das 36 Variáveis ML.NET">
                             <MudSimpleTable Dense="true" Hover="true" Outlined="true">
                                 <tbody>
                                     <tr><td><MudText Typo="Typo.caption">OGA Geração O₂ / CDRA Remoção CO₂</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_ogaCapacityKgDay:F1} kg/d") / @($"{_cdraCapacityKgDay:F1} kg/d")</b></MudText></td></tr>
@@ -236,6 +291,7 @@
                                     <tr><td><MudText Typo="Typo.caption">Blindagem BNNT / Camadas Whipple</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_radShieldingGcm2:F0} g/cm²") / @_whippleLayers camadas</b></MudText></td></tr>
                                     <tr><td><MudText Typo="Typo.caption">Rejeição Térmica / Banco Li-S</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_thermalRejectionKw:F0} kWt") / @($"{_batteryStorageKwh:F0} kWh")</b></MudText></td></tr>
                                     <tr><td><MudText Typo="Typo.caption">Comida / Água / Remédios / Peças</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_foodProvisionsKg:F0}kg / {_potableWaterLiters:F0}L / {_medicalSuppliesKg:F0}kg / {_toolsAndSparesKg:F0}kg")</b></MudText></td></tr>
+                                    <tr><td><MudText Typo="Typo.caption">Trade-Off Outpost (Watts / Litros O₂ / Blindagem / Latência)</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_outpostWattDelta:+0;-0;0}W / {_outpostO2LitersDelta:+0;-0;0}L / +{_outpostShieldingGcm2Delta:F0}g/cm² / {_communicationDelaySec:F1}s")</b></MudText></td></tr>
                                 </tbody>
                             </MudSimpleTable>
                         </MudExpansionPanel>
@@ -425,6 +481,8 @@
     private HashSet<string> _selectedShipBuildCardIds = new() { "BLD-01", "BLD-02", "BLD-03", "BLD-04", "BLD-09" };
     private HashSet<string> _selectedEclssCardIds = new() { "ECL-01", "ECL-02", "ECL-03", "ECL-04", "ECL-05" };
     private HashSet<string> _selectedEnvCardIds = new();
+    private HashSet<string> _selectedOutpostDecisionCardIds = new() { "ARC-LSS-01", "ARC-SHD-01", "ARC-PWR-01", "ARC-COM-01" };
+    private HashSet<string> _selectedDonkiEventCardIds = new() { "SWX-DONKI-01" };
     private List<ComboSynergyDef> _activeSynergies = new();
 
     private int _selectedCrewCount = 6;
@@ -436,7 +494,7 @@
     private float _inputTechAlloc = 0.85f;
     private float _inputInitialEntropy = 0.03f;
 
-    // 32 Features Calculadas pela Combinação dos 3 Decks
+    // 36 Features Calculadas pela Combinação dos 3 Decks
     private float _bioreactorLiters = 6900f;
     private float _waterRecoveryEff = 0.985f;
     private float _brineRecoveryEff = 0.945f;
@@ -458,6 +516,10 @@
     private float _eclssSynergyIndex = 0.92f;
     private float _crewProtectionBuff = 0.84f;
     private float _biomeShieldingBuff = 0.86f;
+    private float _outpostWattDelta = 20800f;
+    private float _outpostO2LitersDelta = 6170f;
+    private float _outpostShieldingGcm2Delta = 59.5f;
+    private float _communicationDelaySec = 1.28f;
 
     private double _liveDistanceKm = 414.2;
     private float _baseSolarWeatherMultiplier = 1.12f;
@@ -532,13 +594,39 @@
         RecalculateMissionAndTimelines();
     }
 
+    private void ToggleOutpostDecisionCard(string cardId, bool equip)
+    {
+        if (equip && _selectedOutpostDecisionCardIds.Count < 4)
+            _selectedOutpostDecisionCardIds.Add(cardId);
+        else if (!equip)
+            _selectedOutpostDecisionCardIds.Remove(cardId);
+        RecalculateMissionAndTimelines();
+    }
+
+    private void ToggleDonkiEventCard(string cardId, bool equip)
+    {
+        if (equip && _selectedDonkiEventCardIds.Count < 2)
+            _selectedDonkiEventCardIds.Add(cardId);
+        else if (!equip)
+            _selectedDonkiEventCardIds.Remove(cardId);
+        RecalculateMissionAndTimelines();
+    }
+
     private void ComputeThreeDeckCombinedProperties()
     {
         var shipCards = ThreeDeckDefinitions.ShipBuildDeck.Where(c => _selectedShipBuildCardIds.Contains(c.CardId)).ToList();
         var eclssCards = ThreeDeckDefinitions.EclssPropertiesDeck.Where(c => _selectedEclssCardIds.Contains(c.CardId)).ToList();
         var envCards = _profile.EnvCards.Where(c => _selectedEnvCardIds.Contains(c.CardId)).ToList();
 
-        var allEquipped = _selectedShipBuildCardIds.Concat(_selectedEclssCardIds).Concat(_selectedEnvCardIds).ToHashSet();
+        var arcCards = ThreeDeckDefinitions.OutpostArchitecturalDecisionsDeck.Where(c => _selectedOutpostDecisionCardIds.Contains(c.CardId)).ToList();
+        var swxCards = ThreeDeckDefinitions.DonkiSpaceWeatherEventsDeck.Where(c => _selectedDonkiEventCardIds.Contains(c.CardId)).ToList();
+
+        var allEquipped = _selectedShipBuildCardIds
+            .Concat(_selectedEclssCardIds)
+            .Concat(_selectedEnvCardIds)
+            .Concat(_selectedOutpostDecisionCardIds)
+            .Concat(_selectedDonkiEventCardIds)
+            .ToHashSet();
         _activeSynergies = ThreeDeckDefinitions.ComboSynergies.Where(s => s.RequiredCards.All(r => allEquipped.Contains(r))).ToList();
         float comboBonus = _activeSynergies.Count * 0.045f;
 
@@ -578,6 +666,17 @@
             (eclssCards.Sum(c => c.FilterEntropyResistanceBonus) + envCards.Sum(c => c.BiomeShieldingBonus)) * 0.42f + comboBonus,
             0.12f, 0.97f);
 
+        _outpostWattDelta = arcCards.Sum(c => c.WattDelta) + swxCards.Sum(c => c.WattPenalty);
+        _outpostO2LitersDelta = arcCards.Sum(c => c.O2LitersDelta) + swxCards.Sum(c => c.O2LitersLoss);
+        _outpostShieldingGcm2Delta = arcCards.Sum(c => c.ShieldingGcm2Delta);
+
+        float baseLightDelay = _profile.IdKey == "Mars" ? 760.0f : (_profile.IdKey == "Moon" ? 1.28f : 0.05f);
+        _communicationDelaySec = Math.Max(0.05f, baseLightDelay + arcCards.Sum(c => c.CommDelaySecDelta) + swxCards.Sum(c => c.CommDelaySpikeSec));
+
+        _radShieldingGcm2 += _outpostShieldingGcm2Delta * 0.35f;
+        _electricalPowerKw = Math.Clamp(_electricalPowerKw + (_outpostWattDelta / 1000f), 25f, 310f);
+        _ogaCapacityKgDay = Math.Max(1.8f, _ogaCapacityKgDay + (_outpostO2LitersDelta / 700f));
+
         _totalShipMassTons = 38.0f + shipDryMass + eclssDryMass + (_bioreactorLiters / 1000f) +
                              ((_foodProvisionsKg + _potableWaterLiters + _medicalSuppliesKg + _toolsAndSparesKg) / 1000f);
     }
@@ -599,7 +698,7 @@
                                     (artifact.DaysEnsemble?.Trees.Count ?? 0) +
                                     (artifact.HealthEnsemble?.Trees.Count ?? 0) +
                                     (artifact.ReliabilityEnsemble?.Trees.Count ?? 0);
-                    _modelSourceStatus = $"240k Quad-ML ({treeCount} árvores / 32 feat)";
+                    _modelSourceStatus = $"240k Quad-ML ({treeCount} árvores / 36 feat)";
                     return;
                 }
             }
@@ -607,7 +706,7 @@
         catch { }
 
         _isModelLoaded = true;
-        _modelSourceStatus = "240k Quad Surrogate (32 feat)";
+        _modelSourceStatus = "240k Quad Surrogate (36 feat)";
     }
 
     private async Task LoadNasaSnapshotArtifactAsync()
@@ -678,7 +777,8 @@
             _totalShipMassTons, _foodProvisionsKg, _potableWaterLiters, _medicalSuppliesKg,
             _electricalPowerKw, _batteryStorageKwh, _thermalRejectionKw, _radShieldingGcm2,
             _whippleLayers, _artificialGravityG, _evaSuitDurabilityPct, _toolsAndSparesKg,
-            _commsBandwidthGbps, _ogaCapacityKgDay, _cdraCapacityKgDay, eclssSynergy
+            _commsBandwidthGbps, _ogaCapacityKgDay, _cdraCapacityKgDay, eclssSynergy,
+            _outpostWattDelta, _outpostO2LitersDelta, _outpostShieldingGcm2Delta, _communicationDelaySec
         ];
 
         var phys = ComputeQuadReference(features);
@@ -708,9 +808,14 @@
         float crewBuff = f[14], biomeBuff = f[15], massTons = f[16], foodKg = f[17], waterL = f[18], medsKg = f[19];
         float elecKw = f[20], battKwh = f[21], thermKw = f[22], radShield = f[23], whipple = f[24], artG = f[25];
         float suitPct = f[26], toolsKg = f[27], commsGbps = f[28], ogaKg = f[29], cdraKg = f[30], eclssSyn = f[31];
+        float outpostWatt = f.Length > 32 ? f[32] : 0f;
+        float outpostO2L = f.Length > 33 ? f[33] : 0f;
+        float outpostShield = f.Length > 34 ? f[34] : 0f;
+        float commDelaySec = f.Length > 35 ? f[35] : 1.28f;
 
-        float effectiveCrewStress = Math.Clamp(1.0f - (crewBuff * 0.40f), 0.48f, 1.0f);
-        float o2Ratio = Math.Clamp((ogaKg + (bioLiters / 420f) * 0.84f) / (safeCrew * 0.84f), 0.35f, 3.20f);
+        float commDelayPenalty = Math.Clamp(commDelaySec / 2400f, 0f, 0.28f);
+        float effectiveCrewStress = Math.Clamp(1.0f - (crewBuff * 0.40f) + (commDelayPenalty * 0.12f), 0.48f, 1.05f);
+        float o2Ratio = Math.Clamp((ogaKg + (outpostO2L / 700f) + (bioLiters / 420f) * 0.84f) / (safeCrew * 0.84f), 0.35f, 3.40f);
         float co2Ratio = Math.Clamp((cdraKg + (bioLiters / 400f) * 1.04f) / (safeCrew * 1.04f), 0.35f, 3.20f);
         float gasLoopRatio = MathF.Sqrt(o2Ratio * co2Ratio);
 
@@ -966,6 +1071,19 @@
     // ========================================================================
     public sealed record ComboSynergyDef(string SynergyId, string NamePt, string NameEn, string[] RequiredCards);
 
+    public sealed record OutpostDecisionCardDef(
+        string CardId, string OutpostEnv, string OutpostEnvPt, string DecisionDomain, string DecisionDomainPt,
+        string NamePt, string NameEn, float WattDelta, float O2LitersDelta, float ShieldingGcm2Delta,
+        float CommDelaySecDelta, float BiomeBuff, float CrewBuff, string NasaSource, string NasaImageAssetUrl
+    );
+
+    public sealed record DonkiEventCardDef(
+        string CardId, string EventCode, string EventClassPt, string EventClassEn,
+        float WattPenalty, float O2LitersLoss, float RequiredShieldingFloorGcm2,
+        float CommDelaySpikeSec, float RadiationDelta, string CountermeasurePt, string CountermeasureEn,
+        string NasaImageAssetUrl
+    );
+
     public sealed record ShipBuildCardDef(
         string CardId, string SlotCategory, string Name, float DryMassTons, float RadiationShieldingGcm2,
         int MicrometeoroidWhippleLayers, float ThermalRejectionCapacityKw, float ElectricalPowerKwDelta,
@@ -989,7 +1107,69 @@
             new("SYN-CLOSED-WATER-99", "Hydro-Loop 99,2% (WPA+BPA+TCCS)", "99.2% Hydro-Loop (WPA+BPA+TCCS)", ["ECL-01", "ECL-02", "ECL-06"]),
             new("SYN-CRYO-METHALOX-ISRU", "Loop Methalox (Cryo+Sabatier+Bosch)", "Methalox Loop (Cryo+Sabatier+Bosch)", ["BLD-06", "ECL-04", "ECL-07"]),
             new("SYN-DEEP-SPACE-IMMUNE", "Bio-Escudo (MedBay+Centrífuga+AnMBR)", "Bio-Shield (MedBay+Centrifuge+AnMBR)", ["BLD-04", "BLD-09", "ECL-10"]),
-            new("SYN-AUTONOMOUS-EVA-FAB", "Robótica EVA (xEMU+DSOC+Valkyrie)", "EVA Robotics (xEMU+DSOC+Valkyrie)", ["BLD-03", "BLD-05", "BLD-08"])
+            new("SYN-AUTONOMOUS-EVA-FAB", "Robótica EVA (xEMU+DSOC+Valkyrie)", "EVA Robotics (xEMU+DSOC+Valkyrie)", ["BLD-03", "BLD-05", "BLD-08"]),
+            new("SYN-OUTPOST-POWER-O2-SHIELD-TRIAD", "Tríade Outpost Watt-Litro-Grama", "Outpost Watt-Liter-Gram Triad", ["BLD-02", "ECL-03", "ARC-SHD-01", "ARC-PWR-01"]),
+            new("SYN-DONKI-SOLAR-STORM-AUTONOMY", "Autonomia DONKI Edge-AI", "DONKI Edge-AI Autonomy", ["BLD-05", "ARC-COM-01", "SWX-DONKI-01", "SWX-DONKI-04"])
+        ];
+
+        public static readonly List<OutpostDecisionCardDef> OutpostArchitecturalDecisionsDeck =
+        [
+            new("ARC-LSS-01", "LunarOutpost", "Posto Lunar", "LifeSupport", "Suporte à Vida",
+                "Usina Carbotérmica de O2 e Mineração de Gelo em Shackleton", "Shackleton Regolith Ice-Mining & Carbothermal O2 Plant",
+                -9800f, 5200f, 8.0f, 0f, 0.30f, 0.35f, "NASA Kennedy CaRD & Artemis Polar ISRU",
+                "https://images-assets.nasa.gov/image/nhq202009210003/nhq202009210003~medium.jpg"),
+            new("ARC-LSS-02", "MartianOutpost", "Posto Marciano", "LifeSupport", "Suporte à Vida",
+                "MOXIE Escalado 200x + Domo Estufa Pressurizado Chlorella", "Scaled 200x MOXIE + Chlorella Pressurized Greenhouse Dome",
+                -14500f, 7800f, 12.5f, 0f, 0.46f, 0.42f, "NASA TechPort MOXIE Scaled Mars ISRU",
+                "https://images-assets.nasa.gov/image/KSC-20161020-PH_KLS01_0002/KSC-20161020-PH_KLS01_0002~medium.jpg"),
+            new("ARC-SHD-01", "LunarOutpost", "Posto Lunar", "RadiationShielding", "Blindagem Radiação",
+                "Abóbada de Regolito Lunar Sinterizado 3D (45 g/cm²)", "3D-Sintered Lunar Regolith Vault (45 g/cm²)",
+                -6200f, -150f, 45.0f, 5.0f, 0.54f, 0.58f, "NASA Marshall MMPACT & Langley OLTARIS",
+                "https://images-assets.nasa.gov/image/MSFC-1900251/MSFC-1900251~medium.jpg"),
+            new("ARC-SHD-02", "MartianOutpost", "Posto Marciano", "RadiationShielding", "Blindagem Radiação",
+                "Outpost Subterrâneo em Tubo de Lava Arsia Mons + BNNT", "Arsia Mons Lava Tube Subsurface Outpost + BNNT Liner",
+                -4100f, 220f, 68.0f, 45.0f, 0.65f, 0.68f, "NASA JPL Mars Subsurface Lava Tube Habitability",
+                "https://images-assets.nasa.gov/image/PIA13129/PIA13129~medium.jpg"),
+            new("ARC-PWR-01", "LunarOutpost", "Posto Lunar", "PowerBudgeting", "Orçamento Energia",
+                "Microrrede de Fissão Quad-Kilopower 40 kWe + VSAT Polar", "Quad-Kilopower 40 kWe Fission Microgrid + Polar VSAT",
+                40000f, 1400f, 5.0f, -10.0f, 0.28f, 0.30f, "NASA Glenn Fission Surface Power (FSP) & VSAT",
+                "https://images-assets.nasa.gov/image/GRC-2021-C-02447/GRC-2021-C-02447~medium.jpg"),
+            new("ARC-PWR-02", "MartianOutpost", "Posto Marciano", "PowerBudgeting", "Orçamento Energia",
+                "Matriz Nuclear Stirling + Célula Methalox Regenerativa", "Dust-Tolerant Nuclear Stirling + Regenerative Methalox Cell",
+                32000f, -480f, 4.0f, -15.0f, 0.32f, 0.29f, "NASA Glenn Nuclear Stirling & Mars Fuel Cell",
+                "https://images-assets.nasa.gov/image/GRC-2017-C-01242/GRC-2017-C-01242~medium.jpg"),
+            new("ARC-COM-01", "LunarOutpost", "Posto Lunar", "CommunicationDelay", "Atraso Comunicação",
+                "Constelação Relay Halo LunarNet L2 + Matriz Banda Ka", "LunarNet L2 Halo Relay Constellation + Ka-Band Array",
+                -3200f, 0f, 1.5f, -120.0f, 0.18f, 0.26f, "NASA LunaNet Interoperability & LCRD Relay",
+                "https://images-assets.nasa.gov/image/GSFC_20210519_LCRD_m13792/GSFC_20210519_LCRD_m13792~medium.jpg"),
+            new("ARC-COM-02", "MartianOutpost", "Posto Marciano", "CommunicationDelay", "Atraso Comunicação",
+                "Relay Óptico Areoestacionário DSOC + Piloto Edge Quad-ML.NET", "Areostationary DSOC Optical Relay + Quad-ML.NET Edge AI",
+                -5800f, 350f, 2.0f, -840.0f, 0.36f, 0.44f, "NASA JPL Deep Space Network & Psyche DSOC",
+                "https://images-assets.nasa.gov/image/PIA24125/PIA24125~medium.jpg")
+        ];
+
+        public static readonly List<DonkiEventCardDef> DonkiSpaceWeatherEventsDeck =
+        [
+            new("SWX-DONKI-01", "DONKI-FLR-X10", "Flare Solar Classe X (X10.4)", "X-Class Solar Flare (X10.4)",
+                -6500f, -280f, 28.0f, 620.0f, 0.65f,
+                "Redirecionar +4.500 W para o Laser DSOC e ativar modo Edge-AI.",
+                "Divert +4,500 W to DSOC Laser Beacon and enable Edge-AI mode.",
+                "https://images-assets.nasa.gov/image/GSFC_20170906_Archive_e000393/GSFC_20170906_Archive_e000393~medium.jpg"),
+            new("SWX-DONKI-02", "DONKI-SEP-100MEV", "Tempestade de Prótons SEP S4 (>100 MeV)", "SEP S4 Proton Storm (>100 MeV)",
+                -11000f, -920f, 42.0f, 340.0f, 1.15f,
+                "Exige >= 40 g/cm² de blindagem BNNT/Regolito e suspensão de EVAs.",
+                "Requires >= 40 g/cm² BNNT/Regolith shielding and EVA suspension.",
+                "https://images-assets.nasa.gov/image/GSFC_20120123_Archive_e001881/GSFC_20120123_Archive_e001881~medium.jpg"),
+            new("SWX-DONKI-03", "DONKI-CME-HALO", "Ejeção de Massa Coronal em Halo (>2.100 km/s)", "Fast Halo CME (>2,100 km/s)",
+                -14000f, -540f, 36.0f, 480.0f, 0.90f,
+                "Isolar baterias SABERS e alocar +8.000 W ao escudo toroidal.",
+                "Isolate SABERS batteries and route +8,000 W to toroidal shield.",
+                "https://images-assets.nasa.gov/image/GSFC_20140225_Archive_e001465/GSFC_20140225_Archive_e001465~medium.jpg"),
+            new("SWX-DONKI-04", "DONKI-FORBUSH-CONJ", "Blackout de Conjunção Solar em Marte", "Mars Solar Conjunction Blackout",
+                -4500f, -410f, 30.0f, 1440.0f, 0.45f,
+                "100% de controle autônomo local pelo Quad-Ensemble ML.NET.",
+                "100% autonomous local takeover by the Quad-Ensemble ML.NET.",
+                "https://images-assets.nasa.gov/image/PIA19821/PIA19821~medium.jpg")
         ];
 
         public static readonly List<ShipBuildCardDef> ShipBuildDeck =

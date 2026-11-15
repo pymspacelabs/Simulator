@@ -1,24 +1,23 @@
- 
-@inject ILocalizer<NavMenu> L
-  
+@using MudBlazor
+
 <MudNavMenu Color="Color.Primary" Bordered="true" Margin="Margin.Normal">
     <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="px-4 pt-3 pb-1">
-        <b>@L["AppTitle"] (3-DECK ECLSS)</b>
+        <b>NAVE-BIOMA (3-DECK ECLSS)</b>
     </MudText>
 
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
-        @L["Home"]
+        Painel Principal (Home)
     </MudNavLink>
 
-    <MudNavGroup Title="@L["Destinations"]" Icon="@Icons.Material.Filled.RocketLaunch" Expanded="true">
+    <MudNavGroup Title="Destinos Operacionais NASA" Icon="@Icons.Material.Filled.RocketLaunch" Expanded="true">
         <MudNavLink Href="spacestation" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SpaceDashboard">
-            1. Internacional Spatial Station (ISS)
+            1. Estação Espacial (ISS)
         </MudNavLink>
         <MudNavLink Href="moon" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.NightlightRound">
-            2. Lune (Artemis / NRHO)
+            2. Lua (Artemis / NRHO)
         </MudNavLink>
         <MudNavLink Href="mars" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Public">
-            3. Mars (Órbita & ISRU)
+            3. Marte (Órbita & ISRU)
         </MudNavLink>
     </MudNavGroup>
 </MudNavMenu>

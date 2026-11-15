@@ -38,16 +38,20 @@ jobs:
       - name: Run BioshipSimulator (x64) to train ML.NET and export artifacts for WASM
         env:
           NASA_API_KEY: ${{ secrets.NASA_API_KEY || 'DEMO_KEY' }}
+        working-directory: ${{ github.workspace }}
         run: |
-          dotnet run --project ./src/BioshipSimulator/BioshipSimulator.csproj -c Release -- --export-only --output ./src/Simulator/wwwroot/MLArtifacts
+          dotnet run --project ./src/BioshipSimulator/BioshipSimulator.csproj -c Release --no-restore -- --export-only --output ./src/Simulator/wwwroot/MLArtifacts
 
       - name: WASM artifacts validation
+        working-directory: ${{ github.workspace }}
         run: ls -lh ./src/Simulator/wwwroot/MLArtifacts
 
       - name: Publish SimulatorBioship (Blazor WebAssembly)
+        working-directory: ${{ github.workspace }}
         run: dotnet publish ./src/Simulator/Simulator.csproj -c Release -o release --no-restore
 
       - name: Setup base-href, .nojekyll e 404.html to GitHub Pages
+        working-directory: ${{ github.workspace }}
         run: |
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           sed -i "s|<base href=\"/\" />|<base href=\"/${REPO_NAME}/\" />|g" release/wwwroot/index.html
@@ -56,6 +60,7 @@ jobs:
 
       - name: Artifacts Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v5
+        working-directory: ${{ github.workspace }}
         with:
           path: release/wwwroot
 

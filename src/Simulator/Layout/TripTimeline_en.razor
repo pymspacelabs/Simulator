@@ -29,7 +29,7 @@
                         ML.NET: @_modelSourceStatus
                     </MudChip>
                     <MudChip T="string" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.AutoAwesome">
-                        Active Combos: @_activeSynergies.Count / 4
+                        Active Combos: @_activeSynergies.Count / 6
                     </MudChip>
                     <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.WbSunny">
                         DONKI: @_latestSolarFlare (@($"{_effectiveRadiationIndex:F2}x rad"))
@@ -139,7 +139,7 @@
                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                         <MudText Typo="Typo.h6" Color="Color.Primary">
                             <MudIcon Icon="@Icons.Material.Filled.Style" Class="mr-1" Size="Size.Small" />
-                            3-Deck Builder (32 ML.NET Features)
+                            5-Deck Builder (36 ML.NET Features)
                         </MudText>
                         <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshLiveNasaTelemetryAsync">
@@ -227,8 +227,63 @@
                             </MudStack>
                         </MudExpansionPanel>
 
-                        @* PANEL 4: 32-FEATURE TELEMETRY MATRIX *@
-                        <MudExpansionPanel Text="4. 32-Feature ML.NET Input Telemetry Matrix">
+                        @* DECK 4: OUTPOST ARCHITECTURAL DECISIONS DECK (8 CARDS) *@
+                        <MudExpansionPanel Text="@($"4. Outpost Architectural Decisions Deck ({_selectedOutpostDecisionCardIds.Count}/4 of 8 cards)")">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.caption" Color="Color.Info">
+                                    <b>Active Trade-Offs:</b> @($"{_outpostWattDelta:+0;-0;0} W") | @($"{_outpostO2LitersDelta:+0;-0;0} L O₂/d") | @($"+{_outpostShieldingGcm2Delta:F1} g/cm²") | Delay: <b>@($"{_communicationDelaySec:F1} s")</b>
+                                </MudText>
+                                @foreach (var arcCard in TripTimeline.ThreeDeckDefinitions.OutpostArchitecturalDecisionsDeck)
+                                {
+                                    bool eq = _selectedOutpostDecisionCardIds.Contains(arcCard.CardId);
+                                    <MudPaper Class="pa-2" Outlined="true" Elevation="0">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <div>
+                                                <MudText Typo="Typo.body2" Color="@(eq ? Color.Info : Color.Default)">
+                                                    <b>[@arcCard.CardId] @arcCard.NameEn</b> (@arcCard.DecisionDomain — @arcCard.OutpostEnv)
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">
+                                                    @($"{arcCard.WattDelta:+0;-0;0} W") | @($"{arcCard.O2LitersDelta:+0;-0;0} L O₂/d") | @($"+{arcCard.ShieldingGcm2Delta:F1} g/cm²") | @($"{arcCard.CommDelaySecDelta:+0;-0;0} s") — <i>@arcCard.NasaSource</i>
+                                                </MudText>
+                                            </div>
+                                            <MudSwitch T="bool" Value="@eq"
+                                                       ValueChanged="@((bool v) => ToggleOutpostDecisionCard(arcCard.CardId, v))"
+                                                       Color="Color.Info"
+                                                       Disabled="@(!eq && _selectedOutpostDecisionCardIds.Count >= 4)" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudExpansionPanel>
+
+                        @* DECK 5: NASA DONKI SPACE WEATHER EVENTS DECK (4 CARDS) *@
+                        <MudExpansionPanel Text="@($"5. NASA DONKI Space Weather Deck ({_selectedDonkiEventCardIds.Count}/2 of 4 events)")">
+                            <MudStack Spacing="1">
+                                @foreach (var swxCard in TripTimeline.ThreeDeckDefinitions.DonkiSpaceWeatherEventsDeck)
+                                {
+                                    bool eq = _selectedDonkiEventCardIds.Contains(swxCard.CardId);
+                                    <MudPaper Class="pa-2" Outlined="true" Elevation="0">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <div>
+                                                <MudText Typo="Typo.body2" Color="@(eq ? Color.Warning : Color.Default)">
+                                                    <b>[@swxCard.CardId] @swxCard.EventClassEn</b> (Floor &ge; @($"{swxCard.RequiredShieldingFloorGcm2:F0} g/cm²"))
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">
+                                                    Penalty: @($"{swxCard.WattPenalty:F0} W"), @($"{swxCard.O2LitersLoss:F0} L O₂/d"), +@($"{swxCard.CommDelaySpikeSec:F0} s") — @swxCard.CountermeasureEn
+                                                </MudText>
+                                            </div>
+                                            <MudSwitch T="bool" Value="@eq"
+                                                       ValueChanged="@((bool v) => ToggleDonkiEventCard(swxCard.CardId, v))"
+                                                       Color="Color.Warning"
+                                                       Disabled="@(!eq && _selectedDonkiEventCardIds.Count >= 2)" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudExpansionPanel>
+
+                        @* PANEL 6: 36-FEATURE TELEMETRY MATRIX *@
+                        <MudExpansionPanel Text="6. 36-Feature ML.NET Input Telemetry Matrix">
                             <MudSimpleTable Dense="true" Hover="true" Outlined="true">
                                 <tbody>
                                     <tr><td><MudText Typo="Typo.caption">OGA O₂ Generation / CDRA CO₂ Scrubbing</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_ogaCapacityKgDay:F1} kg/d") / @($"{_cdraCapacityKgDay:F1} kg/d")</b></MudText></td></tr>
@@ -236,6 +291,7 @@
                                     <tr><td><MudText Typo="Typo.caption">BNNT Shielding / Whipple Layers</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_radShieldingGcm2:F0} g/cm²") / @_whippleLayers layers</b></MudText></td></tr>
                                     <tr><td><MudText Typo="Typo.caption">Thermal Rejection / Li-S Battery Bank</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_thermalRejectionKw:F0} kWt") / @($"{_batteryStorageKwh:F0} kWh")</b></MudText></td></tr>
                                     <tr><td><MudText Typo="Typo.caption">Food / Water / Meds / Spare Tools</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_foodProvisionsKg:F0}kg / {_potableWaterLiters:F0}L / {_medicalSuppliesKg:F0}kg / {_toolsAndSparesKg:F0}kg")</b></MudText></td></tr>
+                                    <tr><td><MudText Typo="Typo.caption">Outpost Trade-Offs (Watts / O₂ Liters / Shielding / Delay)</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_outpostWattDelta:+0;-0;0}W / {_outpostO2LitersDelta:+0;-0;0}L / +{_outpostShieldingGcm2Delta:F0}g/cm² / {_communicationDelaySec:F1}s")</b></MudText></td></tr>
                                 </tbody>
                             </MudSimpleTable>
                         </MudExpansionPanel>
@@ -425,6 +481,8 @@
     private HashSet<string> _selectedShipBuildCardIds = new() { "BLD-01", "BLD-02", "BLD-03", "BLD-04", "BLD-09" };
     private HashSet<string> _selectedEclssCardIds = new() { "ECL-01", "ECL-02", "ECL-03", "ECL-04", "ECL-05" };
     private HashSet<string> _selectedEnvCardIds = new();
+    private HashSet<string> _selectedOutpostDecisionCardIds = new() { "ARC-LSS-01", "ARC-SHD-01", "ARC-PWR-01", "ARC-COM-01" };
+    private HashSet<string> _selectedDonkiEventCardIds = new() { "SWX-DONKI-01" };
     private List<TripTimeline.ComboSynergyDef> _activeSynergies = new();
 
     private int _selectedCrewCount = 6;
@@ -458,6 +516,10 @@
     private float _eclssSynergyIndex = 0.92f;
     private float _crewProtectionBuff = 0.84f;
     private float _biomeShieldingBuff = 0.86f;
+    private float _outpostWattDelta = 20800f;
+    private float _outpostO2LitersDelta = 6170f;
+    private float _outpostShieldingGcm2Delta = 59.5f;
+    private float _communicationDelaySec = 1.28f;
 
     private double _liveDistanceKm = 414.2;
     private float _baseSolarWeatherMultiplier = 1.12f;
@@ -532,13 +594,39 @@
         RecalculateMissionAndTimelines();
     }
 
+    private void ToggleOutpostDecisionCard(string cardId, bool equip)
+    {
+        if (equip && _selectedOutpostDecisionCardIds.Count < 4)
+            _selectedOutpostDecisionCardIds.Add(cardId);
+        else if (!equip)
+            _selectedOutpostDecisionCardIds.Remove(cardId);
+        RecalculateMissionAndTimelines();
+    }
+
+    private void ToggleDonkiEventCard(string cardId, bool equip)
+    {
+        if (equip && _selectedDonkiEventCardIds.Count < 2)
+            _selectedDonkiEventCardIds.Add(cardId);
+        else if (!equip)
+            _selectedDonkiEventCardIds.Remove(cardId);
+        RecalculateMissionAndTimelines();
+    }
+
     private void ComputeThreeDeckCombinedProperties()
     {
         var shipCards = TripTimeline.ThreeDeckDefinitions.ShipBuildDeck.Where(c => _selectedShipBuildCardIds.Contains(c.CardId)).ToList();
         var eclssCards = TripTimeline.ThreeDeckDefinitions.EclssPropertiesDeck.Where(c => _selectedEclssCardIds.Contains(c.CardId)).ToList();
         var envCards = _profile.EnvCards.Where(c => _selectedEnvCardIds.Contains(c.CardId)).ToList();
 
-        var allEquipped = _selectedShipBuildCardIds.Concat(_selectedEclssCardIds).Concat(_selectedEnvCardIds).ToHashSet();
+        var arcCards = TripTimeline.ThreeDeckDefinitions.OutpostArchitecturalDecisionsDeck.Where(c => _selectedOutpostDecisionCardIds.Contains(c.CardId)).ToList();
+        var swxCards = TripTimeline.ThreeDeckDefinitions.DonkiSpaceWeatherEventsDeck.Where(c => _selectedDonkiEventCardIds.Contains(c.CardId)).ToList();
+
+        var allEquipped = _selectedShipBuildCardIds
+            .Concat(_selectedEclssCardIds)
+            .Concat(_selectedEnvCardIds)
+            .Concat(_selectedOutpostDecisionCardIds)
+            .Concat(_selectedDonkiEventCardIds)
+            .ToHashSet();
         _activeSynergies = TripTimeline.ThreeDeckDefinitions.ComboSynergies.Where(s => s.RequiredCards.All(r => allEquipped.Contains(r))).ToList();
         float comboBonus = _activeSynergies.Count * 0.045f;
 
@@ -578,6 +666,17 @@
             (eclssCards.Sum(c => c.FilterEntropyResistanceBonus) + envCards.Sum(c => c.BiomeShieldingBonus)) * 0.42f + comboBonus,
             0.12f, 0.97f);
 
+        _outpostWattDelta = arcCards.Sum(c => c.WattDelta) + swxCards.Sum(c => c.WattPenalty);
+        _outpostO2LitersDelta = arcCards.Sum(c => c.O2LitersDelta) + swxCards.Sum(c => c.O2LitersLoss);
+        _outpostShieldingGcm2Delta = arcCards.Sum(c => c.ShieldingGcm2Delta);
+
+        float baseLightDelay = _profile.IdKey == "Mars" ? 760.0f : (_profile.IdKey == "Moon" ? 1.28f : 0.05f);
+        _communicationDelaySec = Math.Max(0.05f, baseLightDelay + arcCards.Sum(c => c.CommDelaySecDelta) + swxCards.Sum(c => c.CommDelaySpikeSec));
+
+        _radShieldingGcm2 += _outpostShieldingGcm2Delta * 0.35f;
+        _electricalPowerKw = Math.Clamp(_electricalPowerKw + (_outpostWattDelta / 1000f), 25f, 310f);
+        _ogaCapacityKgDay = Math.Max(1.8f, _ogaCapacityKgDay + (_outpostO2LitersDelta / 700f));
+
         _totalShipMassTons = 38.0f + shipDryMass + eclssDryMass + (_bioreactorLiters / 1000f) +
                              ((_foodProvisionsKg + _potableWaterLiters + _medicalSuppliesKg + _toolsAndSparesKg) / 1000f);
     }
@@ -599,7 +698,7 @@
                                     (artifact.DaysEnsemble?.Trees.Count ?? 0) +
                                     (artifact.HealthEnsemble?.Trees.Count ?? 0) +
                                     (artifact.ReliabilityEnsemble?.Trees.Count ?? 0);
-                    _modelSourceStatus = $"240k Quad-ML ({treeCount} trees / 32 feat)";
+                    _modelSourceStatus = $"240k Quad-ML ({treeCount} trees / 36 feat)";
                     return;
                 }
             }
@@ -607,7 +706,7 @@
         catch { }
 
         _isModelLoaded = true;
-        _modelSourceStatus = "240k Quad Surrogate (32 feat)";
+        _modelSourceStatus = "240k Quad Surrogate (36 feat)";
     }
 
     private async Task LoadNasaSnapshotArtifactAsync()
@@ -678,7 +777,8 @@
             _totalShipMassTons, _foodProvisionsKg, _potableWaterLiters, _medicalSuppliesKg,
             _electricalPowerKw, _batteryStorageKwh, _thermalRejectionKw, _radShieldingGcm2,
             _whippleLayers, _artificialGravityG, _evaSuitDurabilityPct, _toolsAndSparesKg,
-            _commsBandwidthGbps, _ogaCapacityKgDay, _cdraCapacityKgDay, eclssSynergy
+            _commsBandwidthGbps, _ogaCapacityKgDay, _cdraCapacityKgDay, eclssSynergy,
+            _outpostWattDelta, _outpostO2LitersDelta, _outpostShieldingGcm2Delta, _communicationDelaySec
         ];
 
         var phys = TripTimeline.ComputeQuadReference(features);
