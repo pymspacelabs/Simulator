@@ -313,26 +313,34 @@ public class BioShipMlAutopilot
         }
     }
 
-    private static FastTreeExportDto? ExtractTreeEnsembleDto(ITransformer model)
+    private static FastTreeExportDto ExtractTreeEnsembleDto(ITransformer model)
     {
-        if (model is TransformerChain<ITransformer> chain &&
-            chain.LastTransformer is ISingleFeaturePredictionTransformer<object> predTransformer &&
-            predTransformer.Model is FastTreeRegressionModelParameters treeParams)
+        ITransformer last = model is IEnumerable<ITransformer> chain
+            ? chain.Last()
+            : model;
+
+        FastTreeRegressionModelParameters? treeParams = last switch
         {
-            var ensemble = treeParams.TrainedTreeEnsemble;
-            return new FastTreeExportDto(
-                ensemble.Bias,
-                ensemble.TreeWeights.ToList(),
-                ensemble.Trees.Select(t => new FastTreeNodeExportDto(
-                    t.LeftChild.ToArray(),
-                    t.RightChild.ToArray(),
-                    t.NumericalSplitFeatureIndexes.ToArray(),
-                    t.NumericalSplitThresholds.Select(x => (double)x).ToArray(),
-                    t.LeafValues.ToArray()
-                )).ToList()
-            );
-        }
-        return null;
+            RegressionPredictionTransformer<FastTreeRegressionModelParameters> reg => reg.Model,
+            ISingleFeaturePredictionTransformer<FastTreeRegressionModelParameters> single => single.Model,
+            _ => last.GetType().GetProperty("Model")?.GetValue(last) as FastTreeRegressionModelParameters
+        };
+
+        if (treeParams is null)
+            throw new InvalidOperationException($"Não foi possível extrair FastTreeRegressionModelParameters de {last.GetType().FullName}.");
+
+        var ensemble = treeParams.TrainedTreeEnsemble;
+        return new FastTreeExportDto(
+            ensemble.Bias,
+            ensemble.TreeWeights.ToList(),
+            ensemble.Trees.Select(t => new FastTreeNodeExportDto(
+                t.LeftChild.ToArray(),
+                t.RightChild.ToArray(),
+                t.NumericalSplitFeatureIndexes.ToArray(),
+                t.NumericalSplitThresholds.Select(x => (double)x).ToArray(),
+                t.LeafValues.ToArray()
+            )).ToList()
+        );
     }
 
     public QuadMlPrediction PredictQuadForDestination(SolarBioCycleData state)
