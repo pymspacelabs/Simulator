@@ -60,7 +60,6 @@ jobs:
 
       - name: Artifacts Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v5
-        working-directory: ${{ github.workspace }}
         with:
           path: release/wwwroot
 
