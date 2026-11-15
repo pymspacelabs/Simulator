@@ -25,28 +25,27 @@ jobs:
 
     steps:
       - name: Checkout 
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup .NET 11 SDK
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '11.0.100' 
 
-      - name: Restaurar dependências da solução NASA.slnx
-        run: dotnet restore Simulator.slnx
+      - name: Restore solution
+        run: dotnet restore ./Simulator/Simulator.slnx
 
       - name: Run BioshipSimulator (x64) to train ML.NET and export artifacts for WASM
         env:
           NASA_API_KEY: ${{ secrets.NASA_API_KEY || 'DEMO_KEY' }}
-        working-directory: ${{ github.environment }}
         run: |
-          dotnet run --project ./src/BioshipSimulator/BioshipSimulator.csproj -c Release -- --export-only --output src/Simulator/wwwroot/MLArtifacts
+          dotnet run --project ./Simulator/src/BioshipSimulator/BioShipSimulator.csproj -c Release -- --export-only --output ./Simulator/src/Simulator/wwwroot/MLArtifacts
 
       - name: WASM artifacts validation
-        run: ls -lh src/SimulatorBioship/wwwroot/MLArtifacts
+        run: ls -lh ./Simulator/src/Simulator/wwwroot/MLArtifacts
 
       - name: Publish SimulatorBioship (Blazor WebAssembly)
-        run: dotnet publish src/Simulator/Simulator.csproj -c Release -o release --no-restore
+        run: dotnet publish ./Simulator/src/Simulator/Simulator.csproj -c Release -o release --no-restore
 
       - name: Setup base-href, .nojekyll e 404.html to GitHub Pages
         run: |

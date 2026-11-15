@@ -1,0 +1,7 @@
+@inject ILocalizer<LocalizedPageTitle> L
+
+<PageTitle>@L[$"PageTitle_{Destination}"]</PageTitle>
+
+@code {
+    [Parameter, EditorRequired] public string Destination { get; set; } = "Home";
+}

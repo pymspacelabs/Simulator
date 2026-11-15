@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@inject ILocalizer<MainLayout> L
+@inject LocalizationState Localization
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -9,8 +11,8 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" />
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" Edge="Edge.End" OnClick="@DrawerToggle" />
-        <MudText Typo="Typo.h6" Class="ml-2">BioShip ()</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" Edge="Edge.End" OnClick="@ToggleLanguage" />
+        <MudText Typo="Typo.h6" Class="ml-2">@L["AppTitle"] (@Localization.CurrentCulture.Name)</MudText>
         <MudSpacer />
         <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
         <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
@@ -49,6 +51,9 @@
     {
         _isDarkMode = !_isDarkMode;
     }
+
+    private void ToggleLanguage() => Localization.SetCulture(
+        Localization.CurrentCulture.Name.Equals("pt-BR", StringComparison.OrdinalIgnoreCase) ? "en-US" : "pt-BR");
 
     private readonly PaletteLight _lightPalette = new()
     {

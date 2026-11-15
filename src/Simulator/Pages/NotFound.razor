@@ -1,9 +1,10 @@
 @page "/not-found"
 @layout MainLayout
+@inject ILocalizer<NotFound> L
 
-<PageTitle>Not Found</PageTitle>
+<PageTitle>@L["NotFound"]</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">404 - Page Not Found</MudText>
-<MudText Class="mb-8">Sorry, the content you are looking for does not exist.</MudText>
+<MudText Typo="Typo.h3" GutterBottom="true">404 - @L["NotFound"]</MudText>
+<MudText Class="mb-8">@L["NotFoundDescription"]</MudText>
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">Go to Home</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">@L["GoHome"]</MudButton>

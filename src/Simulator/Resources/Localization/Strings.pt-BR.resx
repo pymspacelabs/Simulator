@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0</value></resheader>
+  <data name="Language"><value>Idioma</value></data>
+  <data name="AppTitle"><value>BioShip</value></data>
+  <data name="Home"><value>Painel Principal (Início)</value></data>
+  <data name="Destinations"><value>Destinos Operacionais NASA</value></data>
+  <data name="NotFound"><value>Página não encontrada</value></data>
+  <data name="NotFoundDescription"><value>Desculpe, o conteúdo que você procura não existe.</value></data>
+  <data name="GoHome"><value>Ir para o início</value></data>
+  <data name="PageTitle_Home"><value>BioShip Simulator - Missões do Sistema Solar</value></data>
+  <data name="PageTitle_Jupiter"><value>BioShip Simulator - Viagem a Júpiter</value></data>
+  <data name="PageTitle_Mars"><value>BioShip Simulator - Viagem a Marte</value></data>
+  <data name="PageTitle_Mercury"><value>BioShip Simulator - Viagem a Mercúrio</value></data>
+  <data name="PageTitle_Moon"><value>BioShip Simulator - Viagem à Lua (Luna)</value></data>
+  <data name="PageTitle_Neptune"><value>BioShip Simulator - Viagem a Netuno</value></data>
+  <data name="PageTitle_Saturn"><value>BioShip Simulator - Viagem a Saturno</value></data>
+  <data name="PageTitle_ISS"><value>BioShip Simulator - Viagem à Estação Espacial (ISS)</value></data>
+  <data name="PageTitle_Uranus"><value>BioShip Simulator - Viagem a Urano</value></data>
+  <data name="PageTitle_Venus"><value>BioShip Simulator - Viagem a Vênus</value></data>
+</root>

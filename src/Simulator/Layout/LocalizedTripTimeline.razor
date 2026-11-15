@@ -1,0 +1,19 @@
+@using Simulator.Localization
+@implements IDisposable
+@inject LocalizationState Localization
+
+@if (Localization.CurrentCulture.Name.Equals("pt-BR", StringComparison.OrdinalIgnoreCase))
+{
+    <TripTimeline TargetBody="@TargetBody" />
+}
+else
+{
+    <TripTimeline_en TargetBody="@TargetBody" />
+}
+
+@code {
+    [Parameter] public string TargetBody { get; set; } = "ISS";
+    protected override void OnInitialized() => Localization.CultureChanged += OnCultureChanged;
+    private void OnCultureChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => Localization.CultureChanged -= OnCultureChanged;
+}
