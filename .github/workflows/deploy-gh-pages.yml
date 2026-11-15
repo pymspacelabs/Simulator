@@ -1,0 +1,64 @@
+name: Build ML.NET Artifacts & Deploy SimulatorBioship to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v7
+
+      - name: Setup .NET 11 SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '11.0.100' 
+
+      - name: Restaurar dependências da solução NASA.slnx
+        run: dotnet restore Simulator.slnx
+
+      - name: Run BioshipSimulator (x64) to train ML.NET and export artifacts for WASM
+        env:
+          NASA_API_KEY: ${{ secrets.NASA_API_KEY || 'DEMO_KEY' }}
+        run: |
+          dotnet run --project src/BioshipSimulator/BioshipSimulator.csproj -c Release -- --export-only --output src/SimulatorBioship/wwwroot/MLArtifacts
+
+      - name: WASM artifacts validation
+        run: ls -lh src/SimulatorBioship/wwwroot/MLArtifacts
+
+      - name: Publish SimulatorBioship (Blazor WebAssembly)
+        run: dotnet publish src/Simulator/Simulator.csproj -c Release -o release --no-restore
+
+      - name: Setup base-href, .nojekyll e 404.html to GitHub Pages
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          sed -i "s|<base href=\"/\" />|<base href=\"/${REPO_NAME}/\" />|g" release/wwwroot/index.html
+          touch release/wwwroot/.nojekyll
+          cp release/wwwroot/index.html release/wwwroot/404.html
+
+      - name: Artifacts Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: release/wwwroot
+
+      - name: Deploy no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

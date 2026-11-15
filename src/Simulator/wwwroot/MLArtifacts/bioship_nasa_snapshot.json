@@ -1,0 +1,9 @@
+{
+  "EarthMoonDistanceKm": 368157.03,
+  "SolarRadiationIndex": 1.12,
+  "LatestSolarFlareClass": "C2.1 (Nominal)",
+  "ActiveSpaceWeatherEvents": 2,
+  "OsdrAlgaeStudiesCount": 0,
+  "OsdrReferenceStudy": "OSD-521 (ISS Photobioreactor Chlorella)",
+  "ApiSourceStatus": "NASA Live (DONKI:Cache/JPL:OK/OSDR:OK)"
+}

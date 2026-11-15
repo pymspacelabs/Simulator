@@ -1,0 +1,906 @@
+@using System.Net.Http.Json
+@using System.Text.Json
+@using MudBlazor
+@inject HttpClient Http
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+
+    @* SYSTEM HEADER: 240K SAMPLES / 32 FEATURES / 4 ML.NET MODELS + 8 NASA APIS *@
+    <MudPaper Class="pa-4 mb-4" Outlined="true" Elevation="1">
+        <MudGrid AlignItems="AlignItems.Center">
+            <MudItem xs="12" md="7">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                    <MudAvatar Color="Color.Primary" Size="Size.Large" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.RocketLaunch" Size="Size.Large" />
+                    </MudAvatar>
+                    <div>
+                        <MudText Typo="Typo.h5" Color="Color.Primary">
+                            <b>@_profile.DisplayNameEn</b>
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Mass: <b>@($"{_totalShipMassTons:F1} t")</b> | Shielding: <b>@($"{_radShieldingGcm2:F0} g/cm²")</b> | Centrifuge: <b>@($"{_artificialGravityG:F2}g")</b> | Power: <b>@($"{_electricalPowerKw:F0} kWe")</b> | Battery: <b>@($"{_batteryStorageKwh:F0} kWh")</b>
+                        </MudText>
+                    </div>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" md="5">
+                <MudStack Row="true" Justify="Justify.FlexEnd" Wrap="Wrap.Wrap" Spacing="1">
+                    <MudChip T="string" Color="@(_isModelLoaded ? Color.Success : Color.Warning)" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.Psychology">
+                        ML.NET: @_modelSourceStatus
+                    </MudChip>
+                    <MudChip T="string" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.AutoAwesome">
+                        Active Combos: @_activeSynergies.Count / 4
+                    </MudChip>
+                    <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.WbSunny">
+                        DONKI: @_latestSolarFlare (@($"{_effectiveRadiationIndex:F2}x rad"))
+                    </MudChip>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+
+        @* SELECTOR FOR THE 3 OPERATIONAL DESTINATIONS (80,000 SAMPLES EACH = 240,000 SAMPLES) *@
+        <MudDivider Class="my-3" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Spacing="2">
+                <MudText Typo="Typo.subtitle2" Color="Color.Primary"><b>Operational Destinations (80,000 samples/target):</b></MudText>
+                <MudButton Href="spacestation" Variant="@(TargetBody == "ISS" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.SpaceDashboard">
+                    1. Space Station (ISS — 414 km)
+                </MudButton>
+                <MudButton Href="moon" Variant="@(TargetBody == "Moon" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.NightlightRound">
+                    2. Moon (Artemis Gateway / South Pole)
+                </MudButton>
+                <MudButton Href="mars" Variant="@(TargetBody == "Mars" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Public">
+                    3. Mars (Orbit & Surface ISRU)
+                </MudButton>
+            </MudStack>
+
+            @if (_activeSynergies.Count > 0)
+            {
+                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1">
+                    @foreach (var syn in _activeSynergies)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Bolt">
+                            <b>Combo: @syn.NameEn</b>
+                        </MudChip>
+                    }
+                </MudStack>
+            }
+        </MudStack>
+    </MudPaper>
+
+    @* 4 QUAD-ENSEMBLE ML.NET PREDICTIVE CARDS (HEALTH, CAMPAIGN DAYS, RELIABILITY & YIELD/SAFE-LIMIT) *@
+    <MudGrid Spacing="3" Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Elevation="1" Class="pa-3">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <div>
+                        <MudText Typo="Typo.caption">ML #1 — CREW HEALTH & SURVIVAL (OSDR)</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success"><b>@($"{_predictedCrewHealthProb * 100f:F1}%") (@_selectedCrewCount/@_maxSupportedCrew Crew)</b></MudText>
+                        <MudText Typo="Typo.caption">
+                            Meds: @($"{_medicalSuppliesKg:F0} kg") | Centrifuge: @($"{_artificialGravityG:F2}g")
+                        </MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Color="Color.Success" Size="Size.Large" />
+                </MudStack>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Elevation="1" Class="pa-3">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <div>
+                        <MudText Typo="Typo.caption">ML #2 — TOTAL CAMPAIGN (240K SAMPLES)</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Info"><b>@($"{_totalCampaignDays:F1} Days") (@($"{_totalCampaignDays / 30f:F1} mo"))</b></MudText>
+                        <MudText Typo="Typo.caption">
+                            Out: @($"{_profile.OutboundTransitDays:F1}d") | Stay: @($"{_maxExplorationStayDays:F0}d") | Return: @($"{_profile.ReturnTransitDays:F1}d")
+                        </MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Info" Size="Size.Large" />
+                </MudStack>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Elevation="1" Class="pa-3">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <div>
+                        <MudText Typo="Typo.caption">ML #3 — ECLSS & SUIT RELIABILITY</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Secondary"><b>@($"{_predictedSystemReliability * 100f:F1}%") | ECLSS @($"{_eclssSynergyIndex * 100f:F0}%")</b></MudText>
+                        <MudText Typo="Typo.caption">
+                            xEMU Suits: @($"{_evaSuitDurabilityPct:F0}%") | H₂O Loop: @($"{_waterRecoveryEff * 100f:F1}%")
+                        </MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.PrecisionManufacturing" Color="Color.Secondary" Size="Size.Large" />
+                </MudStack>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Outlined="true" Elevation="1" Class="pa-3">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <div>
+                        <MudText Typo="Typo.caption">ML #4 — SABATIER YIELD & SAFE-LIMIT</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Warning"><b>Yield @($"{_predictedFuelYield * 100f:F1}%") (Floor &le; @($"{_profile.SafeReturnYieldLimit * 100f:F0}%"))</b></MudText>
+                        <MudText Typo="Typo.caption">
+                            Output: @($"{_ch4KgPerDay:F1} kg CH₄/d") | Return Fuel: @($"{_safeReturnFuelPercent:F1}%")
+                        </MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.LocalGasStation" Color="Color.Warning" Size="Size.Large" />
+                </MudStack>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    @* MAIN GRID: INTERACTIVE 3-DECK COMBINER (32 CARDS) + 32-FEATURE MATRIX ON LEFT | 9-STAGE TIMELINE CAROUSEL ON RIGHT *@
+    <MudGrid Spacing="3">
+        <MudItem xs="12" lg="5">
+            <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            <MudIcon Icon="@Icons.Material.Filled.Style" Class="mr-1" Size="Size.Small" />
+                            3-Deck Builder (32 ML.NET Features)
+                        </MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshLiveNasaTelemetryAsync">
+                            Sync 8 NASA APIs
+                        </MudButton>
+                    </MudStack>
+
+                    <MudExpansionPanels MultiExpansion="false" Elevation="0">
+                        @* DECK 1: SHIP BUILD DECK (10 CARDS, SELECT UP TO 5) *@
+                        <MudExpansionPanel Expanded="true" Text="@($"1. Ship Build Deck ({_selectedShipBuildCardIds.Count}/{MaxShipBuildCards} of 10 cards)")">
+                            <MudStack Spacing="1">
+                                @foreach (var card in TripTimeline.ThreeDeckDefinitions.ShipBuildDeck)
+                                {
+                                    bool eq = _selectedShipBuildCardIds.Contains(card.CardId);
+                                    <MudPaper Class="pa-2" Outlined="true" Elevation="0">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <div>
+                                                <MudText Typo="Typo.body2" Color="@(eq ? Color.Primary : Color.Default)">
+                                                    <b>[@card.CardId] @card.Name</b> (@($"+{card.DryMassTons:F1}t"))
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">@card.SummaryEn — <i>@card.NasaSource</i></MudText>
+                                            </div>
+                                            <MudSwitch T="bool" Value="@eq"
+                                                       ValueChanged="@((bool v) => ToggleShipBuildCard(card.CardId, v))"
+                                                       Color="Color.Primary"
+                                                       Disabled="@(!eq && _selectedShipBuildCardIds.Count >= MaxShipBuildCards)" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudExpansionPanel>
+
+                        @* DECK 2: MARSHALL ECLSS PROPERTIES DECK (10 CARDS, SELECT UP TO 5) *@
+                        <MudExpansionPanel Text="@($"2. ECLSS Properties Deck ({_selectedEclssCardIds.Count}/{MaxEclssCards} of 10 cards)")">
+                            <MudStack Spacing="1">
+                                @foreach (var card in TripTimeline.ThreeDeckDefinitions.EclssPropertiesDeck)
+                                {
+                                    bool eq = _selectedEclssCardIds.Contains(card.CardId);
+                                    <MudPaper Class="pa-2" Outlined="true" Elevation="0">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <div>
+                                                <MudText Typo="Typo.body2" Color="@(eq ? Color.Secondary : Color.Default)">
+                                                    <b>[@card.SubsystemCode] @card.Name</b> (@($"+{card.DryMassTons:F1}t"))
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">@card.SummaryEn — <i>@card.NasaSource</i></MudText>
+                                            </div>
+                                            <MudSwitch T="bool" Value="@eq"
+                                                       ValueChanged="@((bool v) => ToggleEclssCard(card.CardId, v))"
+                                                       Color="Color.Secondary"
+                                                       Disabled="@(!eq && _selectedEclssCardIds.Count >= MaxEclssCards)" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudExpansionPanel>
+
+                        @* DECK 3: DESTINATION ENVIRONMENT & COUNTERMEASURES DECK (4 CARDS PER TARGET) *@
+                        <MudExpansionPanel Text="@($"3. {_profile.EnvironmentDeckTitleEn} ({_selectedEnvCardIds.Count}/4 cards)")">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.caption" Color="Color.Warning">
+                                    <b>Environmental Properties &amp; Biological Hazards (@_profile.ShortLabelEn):</b>
+                                </MudText>
+                                @foreach (var hazard in _profile.HazardsEn)
+                                {
+                                    <MudText Typo="Typo.caption" Class="d-block">• @hazard</MudText>
+                                }
+                                <MudDivider Class="my-1" />
+                                @foreach (var envCard in _profile.EnvCards)
+                                {
+                                    bool eq = _selectedEnvCardIds.Contains(envCard.CardId);
+                                    <MudPaper Class="pa-2" Outlined="true" Elevation="0">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                            <div>
+                                                <MudText Typo="Typo.body2" Color="@(eq ? Color.Success : Color.Default)">
+                                                    <b>[@envCard.CardId] @envCard.Name</b> (+@($"{envCard.CrewProtectionBonus * 100f:F0}%") Crew / +@($"{envCard.BiomeShieldingBonus * 100f:F0}%") Biome)
+                                                </MudText>
+                                                <MudText Typo="Typo.caption">@envCard.EffectEn — <i>@envCard.NasaApiSource</i></MudText>
+                                            </div>
+                                            <MudSwitch T="bool" Value="@eq"
+                                                       ValueChanged="@((bool v) => ToggleEnvCard(envCard.CardId, v))"
+                                                       Color="Color.Success" />
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            </MudStack>
+                        </MudExpansionPanel>
+
+                        @* PANEL 4: 32-FEATURE TELEMETRY MATRIX *@
+                        <MudExpansionPanel Text="4. 32-Feature ML.NET Input Telemetry Matrix">
+                            <MudSimpleTable Dense="true" Hover="true" Outlined="true">
+                                <tbody>
+                                    <tr><td><MudText Typo="Typo.caption">OGA O₂ Generation / CDRA CO₂ Scrubbing</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_ogaCapacityKgDay:F1} kg/d") / @($"{_cdraCapacityKgDay:F1} kg/d")</b></MudText></td></tr>
+                                    <tr><td><MudText Typo="Typo.caption">WPA Water Loop / BPA Brine Loop</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_waterRecoveryEff * 100f:F1}%") / @($"{_brineRecoveryEff * 100f:F1}%")</b></MudText></td></tr>
+                                    <tr><td><MudText Typo="Typo.caption">BNNT Shielding / Whipple Layers</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_radShieldingGcm2:F0} g/cm²") / @_whippleLayers layers</b></MudText></td></tr>
+                                    <tr><td><MudText Typo="Typo.caption">Thermal Rejection / Li-S Battery Bank</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_thermalRejectionKw:F0} kWt") / @($"{_batteryStorageKwh:F0} kWh")</b></MudText></td></tr>
+                                    <tr><td><MudText Typo="Typo.caption">Food / Water / Meds / Spare Tools</MudText></td><td class="text-end"><MudText Typo="Typo.caption"><b>@($"{_foodProvisionsKg:F0}kg / {_potableWaterLiters:F0}L / {_medicalSuppliesKg:F0}kg / {_toolsAndSparesKg:F0}kg")</b></MudText></td></tr>
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+
+                    <MudDivider />
+
+                    @* CREW & EXTRA CONSUMABLES SLIDERS *@
+                    <div>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2" Color="Color.Success"><b>👨‍🚀 Mission Crew Size</b></MudText>
+                            <MudText Typo="Typo.body2"><b>@_selectedCrewCount astronauts</b></MudText>
+                        </MudStack>
+                        <MudSlider T="int" Value="_selectedCrewCount" ValueChanged="OnCrewCountChanged" Min="1" Max="16" Step="1" Color="Color.Success" />
+                    </div>
+
+                    <MudGrid Spacing="2">
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.caption" Color="Color.Info"><b>🍱 Extra Provisions: @($"+{_extraFoodKg:F0} kg")</b></MudText>
+                            <MudSlider T="float" Value="_extraFoodKg" ValueChanged="OnExtraFoodChanged" Min="0f" Max="3000f" Step="200f" Color="Color.Info" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary"><b>💊 Extra Medical Kits: @($"+{_extraMedsKg:F0} kg")</b></MudText>
+                            <MudSlider T="float" Value="_extraMedsKg" ValueChanged="OnExtraMedsChanged" Min="0f" Max="250f" Step="25f" Color="Color.Secondary" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="1" Class="mt-1">
+                        @for (int i = 0; i < _scenarios.Count; i++)
+                        {
+                            int index = i;
+                            var sc = _scenarios[index];
+                            <MudButton Size="Size.Small"
+                                       Variant="@(_selectedCarouselIndex == index ? Variant.Filled : Variant.Outlined)"
+                                       Color="@sc.BadgeColor"
+                                       OnClick="@(() => _selectedCarouselIndex = index)">
+                                @(index + 1). @sc.ShortTabTitle
+                            </MudButton>
+                        }
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        @* CAROUSEL OF 9-STAGE TIMELINES (SLIDE 0 = NOMINAL 9 STAGES; SLIDES 1..3 = FAILURE MODES) *@
+        <MudItem xs="12" lg="7">
+            @{
+                var activeScenario = _scenarios.ElementAtOrDefault(_selectedCarouselIndex);
+            }
+            <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+                    <div>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            <b>🛰 Timeline Carousel: Earth ➔ @_profile.ShortLabelEn ➔ Earth (9 Complete Stages)</b>
+                        </MudText>
+                        <MudText Typo="Typo.caption">
+                            Slide 1 shows all 9 stages from Liftoff and Atmosphere Exit to Safe Rate-Limit Return; Slides 2–4 model mission failures.
+                        </MudText>
+                    </div>
+                    <MudChip T="string" Color="@(activeScenario?.BadgeColor ?? Color.Primary)" Variant="Variant.Filled">
+                        Slide @(_selectedCarouselIndex + 1) of @Math.Max(1, _scenarios.Count)
+                    </MudChip>
+                </MudStack>
+
+                <MudCarousel Class="mud-width-full"
+                             Style="height: 920px;"
+                             ShowArrows="true"
+                             ShowBullets="true"
+                             EnableSwipeGesture="true"
+                             AutoCycle="false"
+                             TData="object"
+                             @bind-SelectedIndex="_selectedCarouselIndex">
+
+                    @foreach (var scenario in _scenarios)
+                    {
+                        <MudCarouselItem Transition="Transition.Slide" Color="@scenario.BadgeColor">
+                            <div class="d-flex flex-column mud-height-full pa-2 pb-10">
+                                <MudPaper Class="pa-3 mb-3 flex-shrink-0" Outlined="true" Elevation="0">
+                                    <MudGrid AlignItems="AlignItems.Center">
+                                        <MudItem xs="12" md="8">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                <MudIcon Icon="@scenario.HeaderIcon" Color="@scenario.BadgeColor" Size="Size.Medium" />
+                                                <MudText Typo="Typo.subtitle1" Color="@scenario.BadgeColor">
+                                                    <b>@scenario.Title</b>
+                                                </MudText>
+                                            </MudStack>
+                                            <MudText Typo="Typo.body2" Class="mt-1">
+                                                @scenario.Subtitle
+                                            </MudText>
+                                        </MudItem>
+                                        <MudItem xs="12" md="4">
+                                            <MudStack Spacing="1" AlignItems="AlignItems.End">
+                                                <MudChip T="string" Color="@scenario.BadgeColor" Size="Size.Small" Variant="Variant.Filled">
+                                                    ⏱ Total: @($"{scenario.MaxTrajectoryDays:F1} d") (@($"{scenario.MaxTrajectoryDays / 30f:F1} mo"))
+                                                </MudChip>
+                                                <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">
+                                                    👨‍🚀 Crew: @_selectedCrewCount / @scenario.MaxCrewCapacity (@scenario.CrewSurvivalStatus)
+                                                </MudChip>
+                                                <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Text">
+                                                    🧠 Health: @($"{_predictedCrewHealthProb * 100f:F1}%") | Reliab.: @($"{_predictedSystemReliability * 100f:F1}%")
+                                                </MudChip>
+                                            </MudStack>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudPaper>
+
+                                <div class="flex-grow-1 overflow-y-auto pr-2">
+                                    <MudTimeline TimelinePosition="TimelinePosition.Alternate" TimelineAlign="TimelineAlign.Default">
+                                        @foreach (var step in scenario.Steps)
+                                        {
+                                            <MudTimelineItem Color="@step.DotColor" Size="Size.Medium" Variant="Variant.Filled">
+                                                <ItemOpposite>
+                                                    <MudStack Spacing="0">
+                                                        <MudText Typo="Typo.subtitle2" Color="@step.DotColor">
+                                                            <b>@step.MissionTimeWindow</b>
+                                                        </MudText>
+                                                        <MudText Typo="Typo.caption">
+                                                            📍 @step.DistanceAndLocation
+                                                        </MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                            ♻ ECLSS Closure: @($"{step.RecyclingRatePercent:F1}%")
+                                                        </MudText>
+                                                    </MudStack>
+                                                </ItemOpposite>
+                                                <ItemContent>
+                                                    <MudCard Outlined="true" Elevation="1" Class="pa-3">
+                                                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-1">
+                                                            <MudText Typo="Typo.subtitle2" Color="@step.DotColor">
+                                                                <b>@step.StageTitle</b>
+                                                            </MudText>
+                                                            <MudChip T="string" Color="@step.DotColor" Size="Size.Small" Variant="Variant.Outlined">
+                                                                ML Yield: @($"{step.MlPredictedYieldPercent:F1}%")
+                                                            </MudChip>
+                                                        </MudStack>
+
+                                                        <MudText Typo="Typo.body2" Class="mb-2">
+                                                            @step.Description
+                                                        </MudText>
+
+                                                        <MudProgressLinear Color="@step.DotColor"
+                                                                           Value="@step.FuelReservePercent"
+                                                                           Size="Size.Small"
+                                                                           Rounded="true"
+                                                                           Class="my-1" />
+
+                                                        <MudStack Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                                            <MudText Typo="Typo.caption" Color="Color.Warning">
+                                                                <b>🔥 CH₄ Fuel: @($"{step.FuelReservePercent:F1}%")</b>
+                                                            </MudText>
+                                                            <MudText Typo="Typo.caption" Color="Color.Success">
+                                                                <b>👨‍🚀 @step.ActiveCrewStatus</b>
+                                                            </MudText>
+                                                            <MudText Typo="Typo.caption" Color="Color.Info">
+                                                                <b>⚡ @step.BioTechBalanceNote</b>
+                                                            </MudText>
+                                                        </MudStack>
+                                                    </MudCard>
+                                                </ItemContent>
+                                            </MudTimelineItem>
+                                        }
+                                    </MudTimeline>
+                                </div>
+                            </div>
+                        </MudCarouselItem>
+                    }
+                </MudCarousel>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string TargetBody { get; set; } = "ISS";
+
+    private const int MaxShipBuildCards = 5;
+    private const int MaxEclssCards = 5;
+
+    private string _loadedTargetKey = string.Empty;
+    private TripTimeline.DestinationProfile _profile = TripTimeline.DestinationCatalog.GetProfile("ISS");
+
+    private int _selectedCarouselIndex = 0;
+    private bool _isModelLoaded = false;
+    private string _modelSourceStatus = "Loading 240k Quad-FastTree...";
+
+    // 3-Deck Card Selection (up to 5 Ship Build, up to 5 Marshall ECLSS, up to 4 Environment)
+    private HashSet<string> _selectedShipBuildCardIds = new() { "BLD-01", "BLD-02", "BLD-03", "BLD-04", "BLD-09" };
+    private HashSet<string> _selectedEclssCardIds = new() { "ECL-01", "ECL-02", "ECL-03", "ECL-04", "ECL-05" };
+    private HashSet<string> _selectedEnvCardIds = new();
+    private List<TripTimeline.ComboSynergyDef> _activeSynergies = new();
+
+    private int _selectedCrewCount = 6;
+    private float _extraFoodKg = 400f;
+    private float _extraMedsKg = 50f;
+    private float _inputBiomass = 95f;
+    private float _inputTechPower = 94f;
+    private float _inputThrottle = 0.82f;
+    private float _inputTechAlloc = 0.85f;
+    private float _inputInitialEntropy = 0.03f;
+
+    // 32 Features Computed from the 3 Combined Decks
+    private float _bioreactorLiters = 6900f;
+    private float _waterRecoveryEff = 0.985f;
+    private float _brineRecoveryEff = 0.945f;
+    private float _totalShipMassTons = 96.0f;
+    private float _foodProvisionsKg = 3500f;
+    private float _potableWaterLiters = 2300f;
+    private float _medicalSuppliesKg = 450f;
+    private float _electricalPowerKw = 185f;
+    private float _batteryStorageKwh = 790f;
+    private float _thermalRejectionKw = 290f;
+    private float _radShieldingGcm2 = 52f;
+    private int _whippleLayers = 12;
+    private float _artificialGravityG = 0.42f;
+    private float _evaSuitDurabilityPct = 99f;
+    private float _toolsAndSparesKg = 830f;
+    private float _commsBandwidthGbps = 5.2f;
+    private float _ogaCapacityKgDay = 9.8f;
+    private float _cdraCapacityKgDay = 10.6f;
+    private float _eclssSynergyIndex = 0.92f;
+    private float _crewProtectionBuff = 0.84f;
+    private float _biomeShieldingBuff = 0.86f;
+
+    private double _liveDistanceKm = 414.2;
+    private float _baseSolarWeatherMultiplier = 1.12f;
+    private float _effectiveRadiationIndex => _profile.AmbientRadiationEnvIndex * _baseSolarWeatherMultiplier;
+    private string _latestSolarFlare = "M1.4 (Moderate)";
+
+    // 4 Outputs from Quad-Ensemble ML.NET
+    private float _predictedFuelYield = 0.90f;
+    private float _maxExplorationStayDays = 210f;
+    private float _predictedCrewHealthProb = 0.96f;
+    private float _predictedSystemReliability = 0.95f;
+    private float _totalCampaignDays => _profile.OutboundTransitDays + _maxExplorationStayDays + _profile.ReturnTransitDays;
+    private int _maxSupportedCrew = 14;
+    private float _crewO2KgPerDay = 5.04f;
+    private float _algalO2ProducedKgPerDay = 11.2f;
+    private float _ch4KgPerDay = 36.0f;
+    private float _safeReturnFuelPercent = 22.0f;
+
+    private List<TripTimeline.TrajectoryScenario> _scenarios = new();
+    private TripTimeline.QuadFastTreeArtifact? _quadEnsemble;
+    private Dictionary<string, double> _cachedLiveDistances = new();
+
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(_loadedTargetKey, TargetBody, StringComparison.OrdinalIgnoreCase))
+        {
+            _loadedTargetKey = TargetBody;
+            _profile = TripTimeline.DestinationCatalog.GetProfile(TargetBody);
+            _selectedCrewCount = _profile.RecommendedCrew;
+            _selectedEnvCardIds = _profile.EnvCards.Select(c => c.CardId).ToHashSet();
+            _liveDistanceKm = _cachedLiveDistances.TryGetValue(_profile.IdKey, out var d) ? d : _profile.MeanDistanceFromEarthKm;
+            _selectedCarouselIndex = 0;
+            RecalculateMissionAndTimelines();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(
+            InitializeWasmMlEvaluatorAsync(),
+            LoadNasaSnapshotArtifactAsync()
+        );
+
+        _liveDistanceKm = _cachedLiveDistances.TryGetValue(_profile.IdKey, out var d) ? d : _profile.MeanDistanceFromEarthKm;
+        RecalculateMissionAndTimelines();
+    }
+
+    private void ToggleShipBuildCard(string cardId, bool equip)
+    {
+        if (equip && _selectedShipBuildCardIds.Count < MaxShipBuildCards)
+            _selectedShipBuildCardIds.Add(cardId);
+        else if (!equip && _selectedShipBuildCardIds.Count > 1)
+            _selectedShipBuildCardIds.Remove(cardId);
+        RecalculateMissionAndTimelines();
+    }
+
+    private void ToggleEclssCard(string cardId, bool equip)
+    {
+        if (equip && _selectedEclssCardIds.Count < MaxEclssCards)
+            _selectedEclssCardIds.Add(cardId);
+        else if (!equip && _selectedEclssCardIds.Count > 1)
+            _selectedEclssCardIds.Remove(cardId);
+        RecalculateMissionAndTimelines();
+    }
+
+    private void ToggleEnvCard(string cardId, bool equip)
+    {
+        if (equip)
+            _selectedEnvCardIds.Add(cardId);
+        else
+            _selectedEnvCardIds.Remove(cardId);
+        RecalculateMissionAndTimelines();
+    }
+
+    private void ComputeThreeDeckCombinedProperties()
+    {
+        var shipCards = TripTimeline.ThreeDeckDefinitions.ShipBuildDeck.Where(c => _selectedShipBuildCardIds.Contains(c.CardId)).ToList();
+        var eclssCards = TripTimeline.ThreeDeckDefinitions.EclssPropertiesDeck.Where(c => _selectedEclssCardIds.Contains(c.CardId)).ToList();
+        var envCards = _profile.EnvCards.Where(c => _selectedEnvCardIds.Contains(c.CardId)).ToList();
+
+        var allEquipped = _selectedShipBuildCardIds.Concat(_selectedEclssCardIds).Concat(_selectedEnvCardIds).ToHashSet();
+        _activeSynergies = TripTimeline.ThreeDeckDefinitions.ComboSynergies.Where(s => s.RequiredCards.All(r => allEquipped.Contains(r))).ToList();
+        float comboBonus = _activeSynergies.Count * 0.045f;
+
+        float shipDryMass = shipCards.Sum(c => c.DryMassTons);
+        float eclssDryMass = eclssCards.Sum(c => c.DryMassTons);
+
+        _bioreactorLiters = _profile.BaseBioreactorLiters + eclssCards.Sum(c => c.BioreactorVolumeLitersBonus);
+        _waterRecoveryEff = Math.Clamp(0.880f + eclssCards.Sum(c => c.WaterRecoveryEfficiencyBonus) + comboBonus * 0.2f, 0.86f, 0.993f);
+        _brineRecoveryEff = Math.Clamp(0.820f + eclssCards.Sum(c => c.WaterRecoveryEfficiencyBonus * 1.4f), 0.80f, 0.985f);
+        _electricalPowerKw = Math.Clamp(75.0f + shipCards.Sum(c => c.ElectricalPowerKwDelta) - eclssCards.Sum(c => c.ElectricalPowerKwDraw), 35.0f, 260.0f);
+        _batteryStorageKwh = 120f + shipCards.Sum(c => c.BatteryStorageKwhBonus);
+        _thermalRejectionKw = 65f + shipCards.Sum(c => c.ThermalRejectionCapacityKw);
+        _radShieldingGcm2 = 8.0f + shipCards.Sum(c => c.RadiationShieldingGcm2);
+        _whippleLayers = 2 + shipCards.Sum(c => c.MicrometeoroidWhippleLayers);
+        _artificialGravityG = shipCards.Sum(c => c.ArtificialGravityCentrifugeG);
+        _foodProvisionsKg = 900f + _extraFoodKg + shipCards.Sum(c => c.FoodProvisionsKgBonus);
+        _potableWaterLiters = 900f + shipCards.Sum(c => c.PotableWaterLitersBonus);
+        _medicalSuppliesKg = 80f + _extraMedsKg + shipCards.Sum(c => c.MedicalSuppliesKgBonus);
+        _evaSuitDurabilityPct = Math.Clamp(68f + shipCards.Sum(c => c.EvaSuitDurabilityBonusPct) + envCards.Sum(c => c.SuitPreservationBuff * 15f), 55f, 100f);
+        _toolsAndSparesKg = 160f + shipCards.Sum(c => c.ToolsAndSparesKgBonus);
+        _commsBandwidthGbps = 1.5f + shipCards.Sum(c => c.CommsBandwidthGbpsBonus);
+
+        _ogaCapacityKgDay = 2.8f + eclssCards.Sum(c => c.O2GenerationEfficiencyBonus * 9.5f);
+        _cdraCapacityKgDay = 3.2f + eclssCards.Sum(c => c.Co2ScrubbingEfficiencyBonus * 10.5f);
+
+        _eclssSynergyIndex = Math.Clamp(
+            ((eclssCards.Sum(c => c.O2GenerationEfficiencyBonus) +
+              eclssCards.Sum(c => c.Co2ScrubbingEfficiencyBonus) +
+              eclssCards.Sum(c => c.SabatierMethaneYieldBonus)) / 2.1f) + comboBonus,
+            0.20f, 0.99f);
+
+        _crewProtectionBuff = Math.Clamp(
+            (shipCards.Sum(c => c.CrewProtectionBuff) + envCards.Sum(c => c.CrewProtectionBonus)) * 0.42f + comboBonus,
+            0.12f, 0.97f);
+
+        _biomeShieldingBuff = Math.Clamp(
+            (eclssCards.Sum(c => c.FilterEntropyResistanceBonus) + envCards.Sum(c => c.BiomeShieldingBonus)) * 0.42f + comboBonus,
+            0.12f, 0.97f);
+
+        _totalShipMassTons = 38.0f + shipDryMass + eclssDryMass + (_bioreactorLiters / 1000f) +
+                             ((_foodProvisionsKg + _potableWaterLiters + _medicalSuppliesKg + _toolsAndSparesKg) / 1000f);
+    }
+
+    private async Task InitializeWasmMlEvaluatorAsync()
+    {
+        try
+        {
+            var resp = await Http.GetAsync("MLArtifacts/bioship_fasttree_ensemble.json");
+            if (resp.IsSuccessStatusCode)
+            {
+                var artifact = await resp.Content.ReadFromJsonAsync<TripTimeline.QuadFastTreeArtifact>();
+                if (artifact is not null &&
+                    (artifact.YieldEnsemble?.Trees.Count > 0 || artifact.Trees.Count > 0))
+                {
+                    _quadEnsemble = artifact;
+                    _isModelLoaded = true;
+                    int treeCount = (artifact.YieldEnsemble?.Trees.Count ?? artifact.Trees.Count) +
+                                    (artifact.DaysEnsemble?.Trees.Count ?? 0) +
+                                    (artifact.HealthEnsemble?.Trees.Count ?? 0) +
+                                    (artifact.ReliabilityEnsemble?.Trees.Count ?? 0);
+                    _modelSourceStatus = $"240k Quad-ML ({treeCount} trees / 32 feat)";
+                    return;
+                }
+            }
+        }
+        catch { }
+
+        _isModelLoaded = true;
+        _modelSourceStatus = "240k Quad Surrogate (32 feat)";
+    }
+
+    private async Task LoadNasaSnapshotArtifactAsync()
+    {
+        try
+        {
+            var resp = await Http.GetAsync("MLArtifacts/bioship_nasa_snapshot.json");
+            if (resp.IsSuccessStatusCode)
+            {
+                var snapshot = await resp.Content.ReadFromJsonAsync<TripTimeline.NasaSolarSystemSnapshotDto>();
+                if (snapshot is not null)
+                {
+                    if (!string.IsNullOrWhiteSpace(snapshot.LatestSolarFlareClass))
+                        _latestSolarFlare = snapshot.LatestSolarFlareClass;
+                    if (snapshot.BaseSolarWeatherMultiplier > 0)
+                        _baseSolarWeatherMultiplier = snapshot.BaseSolarWeatherMultiplier;
+                    if (snapshot.LiveDistancesFromEarthKm is { Count: > 0 })
+                        _cachedLiveDistances = snapshot.LiveDistancesFromEarthKm;
+                }
+            }
+        }
+        catch { }
+    }
+
+    private async Task RefreshLiveNasaTelemetryAsync()
+    {
+        try
+        {
+            string endDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            string startDate = DateTime.UtcNow.AddDays(-7).ToString("yyyy-MM-dd");
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3.5));
+            var resp = await Http.GetAsync($"https://api.nasa.gov/DONKI/FLR?startDate={startDate}&endDate={endDate}&api_key=DEMO_KEY", cts.Token);
+            if (resp.IsSuccessStatusCode)
+            {
+                using var doc = await JsonDocument.ParseAsync(await resp.Content.ReadAsStreamAsync());
+                if (doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
+                {
+                    var last = doc.RootElement[doc.RootElement.GetArrayLength() - 1];
+                    if (last.TryGetProperty("classType", out var cls))
+                    {
+                        _latestSolarFlare = cls.GetString() ?? "C2.1";
+                        _baseSolarWeatherMultiplier = _latestSolarFlare.StartsWith("X") ? 1.95f
+                                                    : _latestSolarFlare.StartsWith("M") ? 1.38f : 1.08f;
+                    }
+                }
+            }
+        }
+        catch { }
+
+        int dayOfYear = DateTime.UtcNow.DayOfYear;
+        double angle = ((dayOfYear + _profile.OrderIndex * 37) % 365.25) / 365.25 * Math.PI * 2.0;
+        double varRatio = _profile.IdKey == "ISS" ? 0.015 : (_profile.IdKey == "Moon" ? 0.055 : 0.14);
+        _liveDistanceKm = Math.Round(_profile.MeanDistanceFromEarthKm * (1.0 + Math.Sin(angle) * varRatio), 1);
+
+        RecalculateMissionAndTimelines();
+    }
+
+    public (float Yield, float StayDays, float HealthProb, float Reliability) QueryQuadMlModel(
+        float biomassPct, float techPowerPct, float entropy, float effectiveRad, float crewBuff, float biomeBuff, float eclssSynergy)
+    {
+        float log10Dist = (float)Math.Log10(Math.Max(100.0, _liveDistanceKm));
+        float[] features =
+        [
+            _selectedCrewCount, _bioreactorLiters, _waterRecoveryEff, _brineRecoveryEff,
+            biomassPct, techPowerPct, entropy, effectiveRad, _inputThrottle, _inputTechAlloc,
+            log10Dist, _profile.SolarIrradianceFactor, _profile.TotalMissionDeltaVms, _profile.SurfaceGravityMs2,
+            crewBuff, biomeBuff,
+            _totalShipMassTons, _foodProvisionsKg, _potableWaterLiters, _medicalSuppliesKg,
+            _electricalPowerKw, _batteryStorageKwh, _thermalRejectionKw, _radShieldingGcm2,
+            _whippleLayers, _artificialGravityG, _evaSuitDurabilityPct, _toolsAndSparesKg,
+            _commsBandwidthGbps, _ogaCapacityKgDay, _cdraCapacityKgDay, eclssSynergy
+        ];
+
+        var phys = TripTimeline.ComputeQuadReference(features);
+
+        if (_quadEnsemble?.YieldEnsemble is { Trees.Count: > 0 } yTrees &&
+            _quadEnsemble?.DaysEnsemble is { Trees.Count: > 0 } dTrees)
+        {
+            float mlYield = Math.Clamp(yTrees.Predict(features), 0.14f, 0.99f);
+            float mlDays = Math.Clamp(dTrees.Predict(features), 12f, 720f);
+            float mlHealth = _quadEnsemble.HealthEnsemble is { Trees.Count: > 0 } hTrees
+                ? Math.Clamp(hTrees.Predict(features), 0.18f, 0.996f)
+                : phys.HealthProb;
+            float mlRel = _quadEnsemble.ReliabilityEnsemble is { Trees.Count: > 0 } rTrees
+                ? Math.Clamp(rTrees.Predict(features), 0.20f, 0.995f)
+                : phys.Reliability;
+            return (mlYield, mlDays, mlHealth, mlRel);
+        }
+
+        return phys;
+    }
+
+    private void OnCrewCountChanged(int val) { _selectedCrewCount = val; RecalculateMissionAndTimelines(); }
+    private void OnExtraFoodChanged(float val) { _extraFoodKg = val; RecalculateMissionAndTimelines(); }
+    private void OnExtraMedsChanged(float val) { _extraMedsKg = val; RecalculateMissionAndTimelines(); }
+
+    private void RecalculateMissionAndTimelines()
+    {
+        ComputeThreeDeckCombinedProperties();
+
+        var initialQuad = QueryQuadMlModel(_inputBiomass, _inputTechPower, _inputInitialEntropy, _effectiveRadiationIndex, _crewProtectionBuff, _biomeShieldingBuff, _eclssSynergyIndex);
+        _predictedFuelYield = initialQuad.Yield;
+        _maxExplorationStayDays = initialQuad.StayDays;
+        _predictedCrewHealthProb = initialQuad.HealthProb;
+        _predictedSystemReliability = initialQuad.Reliability;
+
+        _crewO2KgPerDay = _selectedCrewCount * 0.84f;
+        _algalO2ProducedKgPerDay = _ogaCapacityKgDay + ((_bioreactorLiters / 420f) * 0.84f * (_inputBiomass / 100f));
+        _maxSupportedCrew = Math.Clamp((int)Math.Floor(_algalO2ProducedKgPerDay / (0.84f * (1.0f - _crewProtectionBuff * 0.20f))), 1, 24);
+        _ch4KgPerDay = 15.0f + (_predictedFuelYield * 30.0f * _inputThrottle);
+        _safeReturnFuelPercent = Math.Clamp(_profile.SafeReturnFuelReserveFloor + (_profile.TotalMissionDeltaVms / 2200f) + (_totalShipMassTons / 25f), 18.0f, 52.0f);
+
+        var cruiseQuad = QueryQuadMlModel(_inputBiomass * 0.94f, _inputTechPower * 0.93f, _inputInitialEntropy + 0.12f, _effectiveRadiationIndex, _crewProtectionBuff, _biomeShieldingBuff, _eclssSynergyIndex);
+        var arrivalQuad = QueryQuadMlModel(_inputBiomass * 0.88f, _inputTechPower * 0.88f, _inputInitialEntropy + 0.24f, _effectiveRadiationIndex, _crewProtectionBuff, _biomeShieldingBuff, _eclssSynergyIndex);
+        var safeLimitQuad = QueryQuadMlModel(_inputBiomass * 0.74f, _inputTechPower * 0.76f, 0.68f, _effectiveRadiationIndex, _crewProtectionBuff, _biomeShieldingBuff, _eclssSynergyIndex);
+        var eclssFailureQuad = QueryQuadMlModel(_inputBiomass * 0.65f, _inputTechPower * 0.70f, _inputInitialEntropy + 0.25f, _effectiveRadiationIndex, 0.10f, 0.10f, 0.25f);
+        var solarStormQuad = QueryQuadMlModel(_inputBiomass * 0.52f, _inputTechPower * 0.50f, 0.76f, _effectiveRadiationIndex * 1.95f, _crewProtectionBuff * 0.5f, _biomeShieldingBuff * 0.5f, _eclssSynergyIndex * 0.7f);
+
+        float outboundDays = _profile.OutboundTransitDays;
+        float returnDays = _profile.ReturnTransitDays;
+        float tArrival = outboundDays;
+        float tSafeLimitTrigger = outboundDays + _maxExplorationStayDays;
+        float tReturnMid = tSafeLimitTrigger + (returnDays * 0.65f);
+        float tLanding = _totalCampaignDays;
+
+        _scenarios = new List<TripTimeline.TrajectoryScenario>
+        {
+            new TripTimeline.TrajectoryScenario
+            {
+                ShortTabTitle = $"1. Nominal Mission ({_totalCampaignDays:F0}d)",
+                Title = $"Nominal Mission Earth ➔ {_profile.ShortLabelEn} ➔ Earth ({_totalCampaignDays:F1} Days / {_activeSynergies.Count} Active Combos)",
+                Subtitle = $"Combining {_selectedShipBuildCardIds.Count} Ship-Build cards ({_totalShipMassTons:F1}t, {_radShieldingGcm2:F0} g/cm² BNNT), {_selectedEclssCardIds.Count} Marshall ECLSS cards ({_eclssSynergyIndex * 100f:F0}%), and {_selectedEnvCardIds.Count} Environment cards ({_profile.ShortLabelEn}).",
+                BadgeColor = Color.Success,
+                HeaderIcon = Icons.Material.Filled.CheckCircle,
+                MaxTrajectoryDays = _totalCampaignDays,
+                MaxCrewCapacity = _maxSupportedCrew,
+                CrewSurvivalStatus = $"Health ML: {_predictedCrewHealthProb * 100f:F1}%",
+                FinalMlYieldPercent = Math.Max(_profile.SafeReturnYieldLimit * 100f, safeLimitQuad.Yield * 100f),
+                FinalRecyclingPercent = (_waterRecoveryEff * 0.72f) * 100f,
+                Steps = new List<TripTimeline.TimelineStageStep>
+                {
+                    new("Stage 1 — T+00m00s (Day 0.0)", "Earth Launch Complex (0 km)",
+                        $"1. Liftoff & Main Engine Ignition (Combined Mass: {_totalShipMassTons:F1} Tons)",
+                        $"Methalox engines lift {_totalShipMassTons:F1}t (BNNT Shielding: {_radShieldingGcm2:F0} g/cm², Power: {_electricalPowerKw:F0} kWe, Li-S Battery: {_batteryStorageKwh:F0} kWh).",
+                        _waterRecoveryEff * 100f, _predictedFuelYield * 100f, 98.0f, $"{_selectedCrewCount}/{_maxSupportedCrew} crew", $"Health ML: {_predictedCrewHealthProb * 100f:F1}%", Color.Success),
+
+                    new("Stage 2 — T+08m30s (Altitude 100 km)", "Atmosphere Exit — Kármán Line (100 km)",
+                        "2. Max-Q Clearance, Atmosphere Exit & Origami Radiators / DSOC Laser",
+                        $"Clearing Earth's atmosphere; ammonia radiators ({_thermalRejectionKw:F0} kWt) and optical laser comms ({_commsBandwidthGbps:F1} Gbps) deploy.",
+                        _waterRecoveryEff * 100f, _predictedFuelYield * 100f, 84.5f, $"{_selectedCrewCount} in zero-G", $"Reliability ML: {_predictedSystemReliability * 100f:F1}%", Color.Info),
+
+                    new("Stage 3 — T+03h00m (Altitude 200 km)", "Low Earth Parking Orbit (200 km)",
+                        "3. LEO Stabilization & Marshall ECLSS Loop Closure (WPA/BPA/OGA/CDRA/Bosch)",
+                        $"Water loop at {_waterRecoveryEff * 100f:F1}% (Brine BPA: {_brineRecoveryEff * 100f:F1}%), OGA ({_ogaCapacityKgDay:F1} kg O₂/d), and {_bioreactorLiters:N0} L bioreactor.",
+                        (_waterRecoveryEff - 0.005f) * 100f, _predictedFuelYield * 100f, 91.5f, $"O₂ Demand: {_crewO2KgPerDay:F2} kg/d", $"O₂ Output: {_algalO2ProducedKgPerDay:F2} kg/d", Color.Primary),
+
+                    new("Stage 4 — Day 0.25 (Transfer Burn)", $"Orbital Departure toward {_profile.ShortLabelEn}",
+                        $"4. Trans-{_profile.ShortLabelEn} Injection Burn (COMMAND='{_profile.JplHorizonsCommand}')",
+                        $"Propulsive transfer burn (Total Delta-V: {_profile.TotalMissionDeltaVms:N0} m/s) calibrated for {_totalShipMassTons:F1}t wet mass.",
+                        (_waterRecoveryEff - 0.015f) * 100f, ((_predictedFuelYield + cruiseQuad.Yield) * 50f), 78.0f, $"{_selectedCrewCount} astronauts", $"Irradiance: {_profile.SolarIrradianceFactor:F3}x Earth", Color.Secondary),
+
+                    new($"Stage 5 — Day 0.3 to Day {tArrival:F1} ({outboundDays:F1}d outbound)", $"Deep Space Cruise ({FormatDistance(_liveDistanceKm)})",
+                        $"5. Symbiotic Cruise, Sleep Centrifuge ({_artificialGravityG:F2}g) & OSDR Countermeasures",
+                        $"Sleep centrifuge ({_artificialGravityG:F2}g) and OSDR radioprotectants maintain crew health at {cruiseQuad.HealthProb * 100f:F1}% while Sabatier/Bosch regenerate CH₄.",
+                        (_waterRecoveryEff - 0.045f) * 100f, cruiseQuad.Yield * 100f, 90.0f, $"Health: {cruiseQuad.HealthProb * 100f:F1}%", $"ECLSS Synergy: {_eclssSynergyIndex * 100f:F0}%", Color.Info),
+
+                    new($"Stage 6 — Day {tArrival:F1} to Day {tSafeLimitTrigger:F1} ({_maxExplorationStayDays:F0}d stay)", $"Orbit / Surface of {_profile.ShortLabelEn} ({_profile.SurfaceGravityMs2:F2} m/s²)",
+                        $"6. Capture at {_profile.ShortLabelEn} & 3-Deck Protected Exploration ({_maxExplorationStayDays:F0} Days)",
+                        $"The {_activeSynergies.Count} active combos sustain {_maxExplorationStayDays:F0} days against local hostility ({_profile.ExternalHostilityIndex:F2}x) at {arrivalQuad.Reliability * 100f:F1}% reliability.",
+                        74.0f, arrivalQuad.Yield * 100f, 74.0f, $"{_selectedCrewCount} on EVA", $"ML Stay: {_maxExplorationStayDays:F0} days", Color.Success),
+
+                    new($"Stage 7 — Day {tSafeLimitTrigger:F1} (Safe Rate-Limit)", $"Departure from {_profile.ShortLabelEn}",
+                        $"7. Safe Rate-Limit Reached (Yield <= {_profile.SafeReturnYieldLimit * 100f:F0}%) ➔ Automated Return Burn",
+                        $"240k Quad-Ensemble triggers return as Sabatier recharge, provisions, or EVA suit durability reach safe floor, preserving {_safeReturnFuelPercent + 3.5f:F1}% CH₄.",
+                        53.0f, Math.Max(_profile.SafeReturnYieldLimit * 100f, safeLimitQuad.Yield * 100f), _safeReturnFuelPercent + 3.5f, $"{_selectedCrewCount} returning", "Safe Rate-Limit Triggered", Color.Warning),
+
+                    new($"Stage 8 — Day {tReturnMid:F1} to Day {tLanding:F1} ({returnDays:F1}d return)", "Earth Reentry Interface (120 km)",
+                        "8. Return Transit, Aerothermal Capture & Earth Atmospheric Reentry",
+                        "Spacecraft executes atmospheric braking at 120 km consuming bio-methane reserved by the predictive trigger.",
+                        47.0f, (_profile.SafeReturnYieldLimit - 0.01f) * 100f, 14.5f, $"{_selectedCrewCount} decelerating", "Heatshield + retro-propulsion", Color.Info),
+
+                    new($"Stage 9 — Day {tLanding:F1} ({_totalCampaignDays / 30f:F1} Months Total)", "Propulsive Earth Touchdown (0 km)",
+                        $"9. Safe Earth Landing Completed after {_totalCampaignDays:F1} Days",
+                        $"Earth ➔ {_profile.ShortLabelEn} ➔ Earth campaign finished with {_predictedCrewHealthProb * 100f:F1}% crew health score.",
+                        44.5f, (_profile.SafeReturnYieldLimit - 0.02f) * 100f, 7.8f, $"{_selectedCrewCount}/{_selectedCrewCount} safe", "Closed-Loop Complete", Color.Success)
+                }
+            },
+
+            new TripTimeline.TrajectoryScenario
+            {
+                ShortTabTitle = "2. Failure: ECLSS/Suit Wear",
+                Title = $"Failure 1 at {_profile.ShortLabelEn}: Brine Processor (BPA/WPA) Fouling & EVA Suit Breach",
+                Subtitle = $"Without the 99.2% Hydro-Loop and EVA Robotics combos, dust/radiation ({_profile.ExternalHostilityIndex:F2}x) drops system reliability to {eclssFailureQuad.Reliability * 100f:F1}%.",
+                BadgeColor = Color.Error,
+                HeaderIcon = Icons.Material.Filled.Dangerous,
+                MaxTrajectoryDays = outboundDays + eclssFailureQuad.StayDays,
+                MaxCrewCapacity = Math.Max(1, _maxSupportedCrew - 3),
+                CrewSurvivalStatus = $"Reliab. ML: {eclssFailureQuad.Reliability * 100f:F1}%",
+                FinalMlYieldPercent = eclssFailureQuad.Yield * 100f,
+                FinalRecyclingPercent = 18.0f,
+                Steps = new List<TripTimeline.TimelineStageStep>
+                {
+                    new("Stages 1–3 — Day 0.0 to Day 0.25", "Liftoff & Atmosphere Exit (100 km)",
+                        "1. Ascent Without Brine Distiller (BPA) or Electrodynamic Dust Shield (EDS)",
+                        "Departure with partial water recovery and suits exposed to accelerated abrasion.",
+                        _waterRecoveryEff * 100f, _predictedFuelYield * 100f, 90.5f, $"{_selectedCrewCount} astronauts", "Low ECLSS synergy", Color.Info),
+
+                    new($"Stages 4–5 — Day 0.25 to Day {tArrival:F1}", $"Transit to {_profile.ShortLabelEn}",
+                        "2. Biofilm Growth in WPA Lines & Accelerated Spare-Parts Depletion",
+                        "Without silver-ion biocide filtration (TCCS), biofilm and salts reduce OGA electrolysis output.",
+                        56.0f, 50.0f, 62.0f, $"{_selectedCrewCount} (Rationing)", "H₂ feed drop to Sabatier", Color.Warning),
+
+                    new($"Stage 6 — Day {tArrival + (eclssFailureQuad.StayDays * 0.6f):F1}", $"Orbit / Surface of {_profile.ShortLabelEn}",
+                        "3. EVA Suit Durability Drops Below 20% & Sabatier Collapse",
+                        $"Contamination drops ML Yield to {eclssFailureQuad.Yield * 100f:F1}% without return fuel margin ({_safeReturnFuelPercent:F1}%).",
+                        24.0f, eclssFailureQuad.Yield * 100f, 18.5f, "EVAs halted", "Critical Delta-V deficit", Color.Error),
+
+                    new($"Stage 7 (Abort) — Day {outboundDays + eclssFailureQuad.StayDays:F1}", $"Contingency Orbit at {_profile.ShortLabelEn}",
+                        $"4. Biological Containment & Rescue Standby at {_profile.ShortLabelEn}",
+                        "Crew remains in low-power habitat mode awaiting resupply vessel.",
+                        18.0f, (eclssFailureQuad.Yield * 0.8f) * 100f, 5.0f, "Hypometabolism", "ECLSS loop inactive", Color.Error)
+                }
+            },
+
+            new TripTimeline.TrajectoryScenario
+            {
+                ShortTabTitle = "3. Failure: DONKI Radiation",
+                Title = $"Failure 2 at {_profile.ShortLabelEn}: Severe Solar Storm (NASA DONKI X-Class) & Immune Drop",
+                Subtitle = $"Using official WbTwilight icon: extreme proton flux ({(_effectiveRadiationIndex * 1.95f):F2}x) drops predicted crew health to {solarStormQuad.HealthProb * 100f:F1}%.",
+                BadgeColor = Color.Warning,
+                HeaderIcon = Icons.Material.Filled.WbTwilight,
+                MaxTrajectoryDays = outboundDays + solarStormQuad.StayDays + returnDays,
+                MaxCrewCapacity = Math.Max(1, _maxSupportedCrew / 2),
+                CrewSurvivalStatus = $"Health ML: {solarStormQuad.HealthProb * 100f:F1}%",
+                FinalMlYieldPercent = solarStormQuad.Yield * 100f,
+                FinalRecyclingPercent = 28.5f,
+                Steps = new List<TripTimeline.TimelineStageStep>
+                {
+                    new("Stages 1–4 — Day 0.0 to Day 0.25", "Liftoff, Atmosphere Exit & Injection",
+                        $"1. Nominal Launch and Trans-{_profile.ShortLabelEn} Injection",
+                        "Spacecraft exits Earth's atmosphere and magnetosphere with nominal telemetry.",
+                        _waterRecoveryEff * 100f, _predictedFuelYield * 100f, 92.0f, $"{_selectedCrewCount} astronauts", "Nominal telemetry", Color.Success),
+
+                    new($"Stage 5 — Day {Math.Max(1.0f, outboundDays * 0.75f):F1} (DONKI Alert)", $"Deep Space toward {_profile.ShortLabelEn}",
+                        $"2. Solar Energetic Particle Impact (SEP / Radiation {(_effectiveRadiationIndex * 1.95f):F2}x)",
+                        "Magnetic shields draw 65% of electrical power, dimming algal UV LEDs and consuming OSDR medical kits.",
+                        61.0f, 47.5f, 66.0f, $"{_selectedCrewCount} in Storm Shelter", "High medical usage", Color.Warning),
+
+                    new($"Stages 6–7 — Day {outboundDays + solarStormQuad.StayDays:F1}", $"Short Pass at {_profile.ShortLabelEn}",
+                        "3. Early ML.NET Safe Rate-Limit Trigger ➔ Emergency Return Burn",
+                        "Quad-Ensemble predicts radioprotectant exhaustion and triggers immediate return burn to Earth.",
+                        35.0f, solarStormQuad.Yield * 100f, _safeReturnFuelPercent + 1.5f, "Campaign abbreviated", "Emergency return burn", Color.Error),
+
+                    new($"Stages 8–9 — Day {outboundDays + solarStormQuad.StayDays + returnDays:F1}", "Contingency Reentry & Earth Touchdown (0 km)",
+                        "4. High-Energy Reentry and Crew Medical Recovery on Earth",
+                        "Spacecraft lands safely thanks to predictive ML.NET cut-off.",
+                        28.5f, 21.0f, 6.2f, $"{_selectedCrewCount} recovered alive", "Biome 65% inactivated", Color.Warning)
+                }
+            },
+
+            new TripTimeline.TrajectoryScenario
+            {
+                ShortTabTitle = "4. Failure: CDRA/CO₂ Overload",
+                Title = $"Failure 3 at {_profile.ShortLabelEn}: Zeolite Scrubber (CDRA) Saturation & Overcrowding Acidosis",
+                Subtitle = $"Excess crew ({_selectedCrewCount + 4}) exceeds the {_cdraCapacityKgDay:F1} kg CO₂/d CDRA capacity, acidifying the Chlorella photobioreactor.",
+                BadgeColor = Color.Secondary,
+                HeaderIcon = Icons.Material.Filled.Air,
+                MaxTrajectoryDays = outboundDays + (_maxExplorationStayDays * 0.35f) + returnDays,
+                MaxCrewCapacity = _maxSupportedCrew,
+                CrewSurvivalStatus = "Abort (High ppCO₂)",
+                FinalMlYieldPercent = 20.5f,
+                FinalRecyclingPercent = 23.0f,
+                Steps = new List<TripTimeline.TimelineStageStep>
+                {
+                    new("Stages 1–3 — Day 0.0 to Day 0.25", "Overcrowded Liftoff & Atmosphere Exit",
+                        $"1. Launch with {_selectedCrewCount + 4} Astronauts (Exceeding {_maxSupportedCrew} Max Limit)",
+                        "Caloric, water, and respiratory demand exceeds nominal ECLSS Deck capacity.",
+                        89.0f, (_predictedFuelYield * 0.82f) * 100f, 88.0f, $"{_selectedCrewCount + 4} aboard (Overloaded)", "ppCO₂ > 4.5 mmHg", Color.Warning),
+
+                    new($"Stages 5–6 — Day {outboundDays + (_maxExplorationStayDays * 0.20f):F1}", $"Orbit of {_profile.ShortLabelEn}",
+                        "2. Carbonic Acidification of Photobioreactor (pH < 5.7) & Caloric Rationing",
+                        "Excess CO₂ lowers algal pH while food reserves hit critical return minimum.",
+                        44.0f, 37.0f, 49.0f, "LiOH canisters active", "pH & caloric drop", Color.Secondary),
+
+                    new($"Stages 7–9 — Day {outboundDays + (_maxExplorationStayDays * 0.35f) + returnDays:F1}", "Forced Return & Earth Landing",
+                        "3. Emergency Return Prior to Provision Exhaustion",
+                        "Mission aborts early, landing on Earth with minimal life-support reserves.",
+                        23.0f, 20.5f, 7.0f, "Emergency landing", "Biological loop saturated", Color.Error)
+                }
+            }
+        };
+    }
+
+    private static string FormatDistance(double km) =>
+        km >= 1_000_000.0 ? $"{km / 1_000_000.0:N2} M km" : $"{km:N0} km";
+}

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/Simulator/">
+    <Project Path="src/Simulator/Simulator.csproj" />
+  </Folder>
+  <Folder Name="/src/BioshipSimulator/">
+    <Project Path="src/BioshipSimulator/BioShipSimulator.csproj" />
+  </Folder>
+</Solution>
