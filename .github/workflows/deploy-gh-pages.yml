@@ -39,7 +39,7 @@ jobs:
         env:
           NASA_API_KEY: ${{ secrets.NASA_API_KEY || 'DEMO_KEY' }}
         run: |
-          dotnet run --project src/BioshipSimulator/BioshipSimulator.csproj -c Release -- --export-only --output src/SimulatorBioship/wwwroot/MLArtifacts
+          dotnet run --project ./src/BioshipSimulator/BioshipSimulator.csproj -c Release -- --export-only --output src/Simulator/wwwroot/MLArtifacts
 
       - name: WASM artifacts validation
         run: ls -lh src/SimulatorBioship/wwwroot/MLArtifacts
