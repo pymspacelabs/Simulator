@@ -38,6 +38,7 @@ jobs:
       - name: Run BioshipSimulator (x64) to train ML.NET and export artifacts for WASM
         env:
           NASA_API_KEY: ${{ secrets.NASA_API_KEY || 'DEMO_KEY' }}
+        working-directory: ${{ github.environment }}
         run: |
           dotnet run --project ./src/BioshipSimulator/BioshipSimulator.csproj -c Release -- --export-only --output src/Simulator/wwwroot/MLArtifacts
 
