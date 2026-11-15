@@ -1,7 +1,15 @@
 @inject ILocalizer<LocalizedPageTitle> L
+@inject LocalizationState Localization
+@implements IDisposable
 
 <PageTitle>@L[$"PageTitle_{Destination}"]</PageTitle>
 
 @code {
     [Parameter, EditorRequired] public string Destination { get; set; } = "Home";
+
+    protected override void OnInitialized() => Localization.CultureChanged += OnCultureChanged;
+
+    private void OnCultureChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Localization.CultureChanged -= OnCultureChanged;
 }

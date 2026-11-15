@@ -8,6 +8,9 @@
   <data name="AppTitle"><value>BioShip</value></data>
   <data name="Home"><value>Main Panel (Home)</value></data>
   <data name="Destinations"><value>NASA Operational Destinations</value></data>
+  <data name="Destination_ISS"><value>Space Station (ISS)</value></data>
+  <data name="Destination_Moon"><value>Moon (Artemis / NRHO)</value></data>
+  <data name="Destination_Mars"><value>Mars (Orbit &amp; ISRU)</value></data>
   <data name="NotFound"><value>Page not found</value></data>
   <data name="NotFoundDescription"><value>Sorry, the content you are looking for does not exist.</value></data>
   <data name="GoHome"><value>Go to Home</value></data>

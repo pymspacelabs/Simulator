@@ -1,23 +1,34 @@
 @using MudBlazor
+@implements IDisposable
+@inject ILocalizer<NavMenu> L
+@inject LocalizationState Localization
 
 <MudNavMenu Color="Color.Primary" Bordered="true" Margin="Margin.Normal">
     <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="px-4 pt-3 pb-1">
-        <b>NAVE-BIOMA (3-DECK ECLSS)</b>
+        <b>BYOM-SHIP  (ECLSS INSPIRED)</b>
     </MudText>
 
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
-        Painel Principal (Home)
+        @L["Home"]
     </MudNavLink>
 
-    <MudNavGroup Title="Destinos Operacionais NASA" Icon="@Icons.Material.Filled.RocketLaunch" Expanded="true">
+    <MudNavGroup Title="@L["Destinations"]" Icon="@Icons.Material.Filled.RocketLaunch" Expanded="true">
         <MudNavLink Href="spacestation" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SpaceDashboard">
-            1. Estação Espacial (ISS)
+            1. @L["Destination_ISS"]
         </MudNavLink>
         <MudNavLink Href="moon" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.NightlightRound">
-            2. Lua (Artemis / NRHO)
+            2. @L["Destination_Moon"]
         </MudNavLink>
         <MudNavLink Href="mars" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Public">
-            3. Marte (Órbita & ISRU)
+            3. @L["Destination_Mars"]
         </MudNavLink>
     </MudNavGroup>
 </MudNavMenu>
+
+@code {
+    protected override void OnInitialized() => Localization.CultureChanged += OnCultureChanged;
+
+    private void OnCultureChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Localization.CultureChanged -= OnCultureChanged;
+}

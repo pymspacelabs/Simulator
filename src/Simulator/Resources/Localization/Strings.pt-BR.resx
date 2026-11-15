@@ -8,6 +8,9 @@
   <data name="AppTitle"><value>BioShip</value></data>
   <data name="Home"><value>Painel Principal (Início)</value></data>
   <data name="Destinations"><value>Destinos Operacionais NASA</value></data>
+  <data name="Destination_ISS"><value>Estação Espacial (ISS)</value></data>
+  <data name="Destination_Moon"><value>Lua (Artemis / NRHO)</value></data>
+  <data name="Destination_Mars"><value>Marte (Órbita &amp; ISRU)</value></data>
   <data name="NotFound"><value>Página não encontrada</value></data>
   <data name="NotFoundDescription"><value>Desculpe, o conteúdo que você procura não existe.</value></data>
   <data name="GoHome"><value>Ir para o início</value></data>
